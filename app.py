@@ -10,7 +10,7 @@ API_KEY = os.getenv("GEMINI_API_KEY", "PEGA_TU_API_KEY_AQUI")
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-# ── PROMPT MÉDICO (exactamente igual que en tu Colab) ──────────
+# ── PROMPT MÉDICO ──────────────────────────────────────────────
 PROMPT_MEDICO = """
 Eres un asistente de apoyo diagnóstico especializado en cirugía plástica y reconstructiva
 pediátrica, con énfasis en labio y paladar hendido (fisuras labiopalatinas).
@@ -44,12 +44,11 @@ Describe brevemente los hallazgos visuales que justifican la clasificación.
 ## 3. PRESUNTO DIAGNÓSTICO
 Nombre técnico del diagnóstico según clasificación de Veau o Kernahan.
 
-## 4. PRÓNOSTICO QURÚRGICO/PLAN DE TRATAMIENTO ORIENTATIVO
+## 4. PRÓNOSTICO QUIRÚRGICO/PLAN DE TRATAMIENTO ORIENTATIVO
 Estima el número aproximado total típico de intervenciones a lo largo del crecimiento y
 lista las intervenciones quirúrgicas recomendadas en orden cronológico:
 Tabla con:
 | Nombre del procedimiento | Número estimado de intervenciones de ese tipo | Objetivo |
-
 
 ## 5. CRONOGRAMA POR RANGO DE EDAD
 Tabla con:
@@ -67,7 +66,6 @@ Justifica brevemente el nivel de complejidad del tratamiento según
 - Compromiso alveolar y nasal.
 - Necesidad de ortodoncia prolongada o cirugía ortognática.
 - Riesgo funcional (habla, alimentación, audición).
-y demás aspectos que consideres relevantes.
 
 ## 7. CONSIDERACIONES ADICIONALES
 Menciona si se requiere: ortopedia prequirúrgica, fonoaudiología, ortodoncia, psicología u otro.
@@ -83,7 +81,7 @@ Es fundamental una evaluación clínica completa y multidisciplinar por parte de
 No reemplaza el juicio clínico profesional ni el examen físico directo del paciente.
 """
 
-# ── FUNCIÓN: cargar imagen (igual que en tu Colab) ─────────────
+# ── FUNCIÓN: cargar imagen ─────────────────────────────────────
 def cargar_imagen(archivo_subido):
     extension = Path(archivo_subido.name).suffix.lower()
     mime_map = {
@@ -97,22 +95,26 @@ def cargar_imagen(archivo_subido):
     datos = archivo_subido.read()
     return {"mime_type": mime_type, "data": datos}
 
-# ── FUNCIÓN: generar PDF ────────────────────────────────────────
-def generar_pdf(nombre, edad, diagnostico):
+# ── FUNCIÓN: generar PDF con todos los informes ────────────────
+def generar_pdf(resultados):
     pdf = FPDF()
-    pdf.add_page()
     pdf.set_margins(15, 15, 15)
 
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "FISULAB - Informe de Apoyo Diagnostico", ln=True, align="C")
-    pdf.set_font("Arial", size=11)
-    pdf.cell(0, 8, f"Paciente: {nombre}  |  Edad: {edad}  |  Fecha: {datetime.today().strftime('%d/%m/%Y')}", ln=True)
-    pdf.ln(4)
-    pdf.set_font("Arial", "I", 9)
-    pdf.multi_cell(0, 5, "AVISO: Este informe es un apoyo de orientacion para el medico tratante. No constituye un diagnostico medico definitivo. Es fundamental una evaluacion clinica completa y multidisciplinar.")
-    pdf.ln(6)
-    pdf.set_font("Arial", size=11)
-    pdf.multi_cell(0, 6, diagnostico)
+    for r in resultados:
+        pdf.add_page()
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(0, 10, "FISULAB - Informe de Apoyo Diagnostico", ln=True, align="C")
+        pdf.set_font("Arial", size=11)
+        pdf.cell(0, 8, f"Archivo: {r['nombre']}  |  Fecha: {datetime.today().strftime('%d/%m/%Y')}", ln=True)
+        pdf.ln(4)
+        pdf.set_font("Arial", "I", 9)
+        pdf.multi_cell(0, 5, "AVISO: Este informe es un apoyo de orientacion para el medico tratante. No constituye un diagnostico medico definitivo.")
+        pdf.ln(6)
+        pdf.set_font("Arial", size=11)
+        if r["error"]:
+            pdf.multi_cell(0, 6, f"ERROR: {r['error']}")
+        else:
+            pdf.multi_cell(0, 6, r["diagnostico"])
 
     return bytes(pdf.output())
 
@@ -123,49 +125,59 @@ st.title("🏥 Fisulab — Apoyo de Diagnóstico con IA")
 st.caption("Herramienta de orientación clínica. No reemplaza el criterio médico profesional.")
 st.divider()
 
-col1, col2 = st.columns(2)
-with col1:
-    nombre = st.text_input("Nombre del paciente", placeholder="Ej: Juan Pérez")
-with col2:
-    edad = st.text_input("Edad del paciente", placeholder="Ej: 3 meses")
-
-foto = st.file_uploader(
-    "Sube la fotografía del paciente",
+fotos = st.file_uploader(
+    "Sube las fotografías de los pacientes",
     type=["jpg", "jpeg", "png", "webp"],
-    help="Formatos aceptados: JPG, PNG, WEBP"
+    accept_multiple_files=True,
+    help="Puedes seleccionar varias fotos a la vez"
 )
 
-if foto:
-    st.image(foto, caption="Imagen cargada", width=300)
+if fotos:
+    st.write(f"📁 {len(fotos)} imagen(es) cargada(s):")
+    cols = st.columns(min(len(fotos), 4))
+    for i, foto in enumerate(fotos):
+        with cols[i % 4]:
+            st.image(foto, caption=foto.name, use_container_width=True)
 
 st.divider()
 
-if foto and st.button("🔍 Generar informe", type="primary", use_container_width=True):
-    with st.spinner("Analizando imagen con IA... esto puede tomar unos segundos."):
-        try:
-            imagen = cargar_imagen(foto)
-            response = model.generate_content([PROMPT_MEDICO, imagen])
-            diagnostico = response.text
+if fotos and st.button("🔍 Generar informes", type="primary", use_container_width=True):
 
-            st.success("✅ Informe generado correctamente")
-            st.divider()
-            st.markdown(diagnostico)
-            st.divider()
+    resultados = []
+    progreso = st.progress(0, text="Iniciando análisis...")
 
-            # Botón de descarga PDF
-            pdf_bytes = generar_pdf(nombre or "No especificado", edad or "No especificada", diagnostico)
-            nombre_archivo = f"informe_fisulab_{nombre.replace(' ', '_') if nombre else 'paciente'}.pdf"
-            st.download_button(
-                label="📄 Descargar informe en PDF",
-                data=pdf_bytes,
-                file_name=nombre_archivo,
-                mime="application/pdf",
-                use_container_width=True
-            )
+    for i, foto in enumerate(fotos):
+        progreso.progress(i / len(fotos), text=f"Analizando {foto.name}...")
 
-        except Exception as e:
-            st.error(f"❌ Error al procesar la imagen: {str(e)}")
-            st.info("Verifica que la API key de Gemini esté configurada correctamente.")
+        with st.expander(f"📷 {foto.name}", expanded=True):
+            try:
+                imagen = cargar_imagen(foto)
+                response = model.generate_content([PROMPT_MEDICO, imagen])
+                diagnostico = response.text
+                st.markdown(diagnostico)
+                resultados.append({"nombre": foto.name, "diagnostico": diagnostico, "error": None})
+                st.success("✅ Informe generado")
 
-elif not foto:
-    st.info("👆 Sube una fotografía para comenzar el análisis.")
+            except Exception as e:
+                msg = str(e)
+                st.error(f"❌ Error: {msg}")
+                resultados.append({"nombre": foto.name, "diagnostico": None, "error": msg})
+
+    progreso.progress(1.0, text="¡Análisis completado!")
+
+    exitosas = sum(1 for r in resultados if not r["error"])
+    st.divider()
+    st.write(f"**Resumen:** {exitosas} de {len(resultados)} imágenes procesadas correctamente.")
+
+    if exitosas > 0:
+        pdf_bytes = generar_pdf(resultados)
+        st.download_button(
+            label="📄 Descargar todos los informes en PDF",
+            data=pdf_bytes,
+            file_name=f"informes_fisulab_{datetime.today().strftime('%d%m%Y')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
+
+elif not fotos:
+    st.info("👆 Sube una o varias fotografías para comenzar el análisis.")
