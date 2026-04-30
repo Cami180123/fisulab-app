@@ -95,11 +95,10 @@ def cargar_imagen(archivo_subido):
     datos = archivo_subido.read()
     return {"mime_type": mime_type, "data": datos}
 
-# ── FUNCIÓN: generar PDF con todos los informes ────────────────
+# ── FUNCIÓN: generar PDF ───────────────────────────────────────
 def generar_pdf(resultados):
     pdf = FPDF()
     pdf.set_margins(15, 15, 15)
-
     for r in resultados:
         pdf.add_page()
         pdf.set_font("Arial", "B", 16)
@@ -116,27 +115,52 @@ def generar_pdf(resultados):
             pdf.multi_cell(0, 6, f"ERROR: {r['error']}")
         else:
             pdf.multi_cell(0, 6, r["diagnostico"])
-
     return bytes(pdf.output())
 
-# ── INTERFAZ STREAMLIT ──────────────────────────────────────────
+# ── CONFIGURACIÓN DE PÁGINA ────────────────────────────────────
 st.set_page_config(page_title="Fisulab - Apoyo Diagnóstico", page_icon="🏥")
 
-st.title("🏥 Fisulab — Apoyo de Diagnóstico con IA")
-st.caption("Herramienta de orientación clínica. No reemplaza el criterio médico profesional.")
+# ── SESSION STATE: guarda el estado entre interacciones ────────
+if "reiniciar" not in st.session_state:
+    st.session_state.reiniciar = False
+
+# Si se pidió reiniciar, limpia el contador para forzar nuevos widgets
+if st.session_state.reiniciar:
+    st.session_state.reiniciar = False
+    st.session_state.paciente_id = st.session_state.get("paciente_id", 0) + 1
+
+if "paciente_id" not in st.session_state:
+    st.session_state.paciente_id = 0
+
+# ── ENCABEZADO + BOTÓN NUEVO PACIENTE ─────────────────────────
+col_titulo, col_boton = st.columns([3, 1])
+with col_titulo:
+    st.title("🏥 Fisulab — Apoyo de Diagnóstico con IA")
+    st.caption("Herramienta de orientación clínica. No reemplaza el criterio médico profesional.")
+with col_boton:
+    st.write("")
+    st.write("")
+    if st.button("🆕 Nuevo paciente", use_container_width=True):
+        st.session_state.reiniciar = True
+        st.rerun()
+
 st.divider()
+
+# ── FORMULARIO (usa paciente_id como key para resetear) ───────
+pid = st.session_state.paciente_id
 
 col1, col2 = st.columns(2)
 with col1:
-    nombre = st.text_input("Nombre del paciente", placeholder="Ej: Juan Pérez")
+    nombre = st.text_input("Nombre del paciente", placeholder="Ej: Juan Pérez", key=f"nombre_{pid}")
 with col2:
-    edad = st.text_input("Edad del paciente", placeholder="Ej: 3 meses")
+    edad = st.text_input("Edad del paciente", placeholder="Ej: 3 meses", key=f"edad_{pid}")
 
 fotos = st.file_uploader(
-    "Sube las fotografías de los pacientes",
+    "Sube las fotografías del paciente",
     type=["jpg", "jpeg", "png", "webp"],
     accept_multiple_files=True,
-    help="Puedes seleccionar varias fotos a la vez"
+    help="Puedes seleccionar varias fotos a la vez",
+    key=f"fotos_{pid}"
 )
 
 if fotos:
@@ -148,6 +172,7 @@ if fotos:
 
 st.divider()
 
+# ── BOTÓN GENERAR ──────────────────────────────────────────────
 if fotos and st.button("🔍 Generar informes", type="primary", use_container_width=True):
 
     resultados = []
@@ -155,23 +180,32 @@ if fotos and st.button("🔍 Generar informes", type="primary", use_container_wi
 
     for i, foto in enumerate(fotos):
         progreso.progress(i / len(fotos), text=f"Analizando {foto.name}...")
-
         with st.expander(f"📷 {foto.name}", expanded=True):
             try:
                 imagen = cargar_imagen(foto)
                 response = model.generate_content([PROMPT_MEDICO, imagen])
                 diagnostico = response.text
                 st.markdown(diagnostico)
-                resultados.append({"nombre": foto.name, "nombre_paciente": nombre or "No especificado", "edad_paciente": edad or "No especificada", "diagnostico": diagnostico, "error": None})
+                resultados.append({
+                    "nombre": foto.name,
+                    "nombre_paciente": nombre or "No especificado",
+                    "edad_paciente": edad or "No especificada",
+                    "diagnostico": diagnostico,
+                    "error": None
+                })
                 st.success("✅ Informe generado")
-
             except Exception as e:
                 msg = str(e)
                 st.error(f"❌ Error: {msg}")
-                resultados.append({"nombre": foto.name, "nombre_paciente": nombre or "No especificado", "edad_paciente": edad or "No especificada", "diagnostico": None, "error": msg})
+                resultados.append({
+                    "nombre": foto.name,
+                    "nombre_paciente": nombre or "No especificado",
+                    "edad_paciente": edad or "No especificada",
+                    "diagnostico": None,
+                    "error": msg
+                })
 
     progreso.progress(1.0, text="¡Análisis completado!")
-
     exitosas = sum(1 for r in resultados if not r["error"])
     st.divider()
     st.write(f"**Resumen:** {exitosas} de {len(resultados)} imágenes procesadas correctamente.")
@@ -181,7 +215,7 @@ if fotos and st.button("🔍 Generar informes", type="primary", use_container_wi
         st.download_button(
             label="📄 Descargar todos los informes en PDF",
             data=pdf_bytes,
-            file_name=f"informes_fisulab_{datetime.today().strftime('%d%m%Y')}.pdf",
+            file_name=f"informes_fisulab_{nombre or 'paciente'}_{datetime.today().strftime('%d%m%Y')}.pdf",
             mime="application/pdf",
             use_container_width=True
         )
