@@ -1,224 +1,427 @@
+"""
+FISULAB · IA Clínica
+Dashboard de apoyo diagnóstico para labio y paladar hendido
+Requiere: pip install streamlit google-generativeai pillow fpdf2
+"""
+
 import streamlit as st
 import google.generativeai as genai
-import os
-from pathlib import Path
+from PIL import Image
 from fpdf import FPDF
-from datetime import datetime
+import io
+import os
+import time
 
-# ── CONFIGURACIÓN ──────────────────────────────────────────────
-API_KEY = os.getenv("GEMINI_API_KEY", "PEGA_TU_API_KEY_AQUI")
-genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel("gemini-2.5-flash")
+# ── CONFIGURACIÓN DE PÁGINA ──────────────────────────────────────────────────
+st.set_page_config(
+    page_title="FISULAB · IA Clínica",
+    page_icon="🏥",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-# ── PROMPT MÉDICO ──────────────────────────────────────────────
+# ── ESTILOS PERSONALIZADOS ───────────────────────────────────────────────────
+st.markdown("""
+<style>
+html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
+.topbar {
+    background: #085041; padding: 14px 24px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+}
+.topbar-title { color: white; font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
+.topbar-sub { color: #9FE1CB; font-size: 13px; margin-top: 2px; }
+.topbar-badge {
+    background: #FAEEDA; color: #854F0B;
+    padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+}
+.metric-card {
+    background: #f8f9fa; border: 1px solid #e9ecef;
+    border-radius: 10px; padding: 16px 20px; text-align: center;
+}
+.metric-value { font-size: 26px; font-weight: 700; color: #085041; }
+.metric-label { font-size: 12px; color: #6c757d; margin-top: 4px; }
+.badge-alta {
+    background: #FCEBEB; color: #A32D2D;
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block;
+}
+.badge-media {
+    background: #FAEEDA; color: #854F0B;
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block;
+}
+.badge-baja {
+    background: #EAF3DE; color: #3B6D11;
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block;
+}
+.disclaimer {
+    background: #FAEEDA; border-left: 4px solid #EF9F27;
+    border-radius: 6px; padding: 12px 16px;
+    font-size: 13px; color: #633806; line-height: 1.6; margin-top: 16px;
+}
+.caso-card {
+    background: white; border: 1px solid #e9ecef;
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+}
+.caso-nombre { font-size: 13px; font-weight: 600; color: #212529; }
+.caso-fecha { font-size: 11px; color: #6c757d; }
+#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
+# ── PROMPT MÉDICO ────────────────────────────────────────────────────────────
 PROMPT_MEDICO = """
 Eres un asistente de apoyo diagnóstico especializado en cirugía plástica y reconstructiva
 pediátrica, con énfasis en labio y paladar hendido (fisuras labiopalatinas).
 
 Analiza la imagen proporcionada y genera un informe clínico estructurado con el siguiente formato:
 
-Paciente pediátrico o adulto (si la edad no se proporciona, indícalo como la edad no se proporciona).
+Paciente pediátrico o adulto (si la edad no se proporciona, indícalo como "edad no disponible").
 Evaluación basada únicamente en imágenes; no hay historia clínica completa.
-La información generada es para orientación y debe ser validada por un equipo médico multidisciplinar
+La información generada es para orientación y debe ser validada por un equipo médico multidisciplinar.
 
 ## ANÁLISIS INICIAL
-Describe primero lo que OBSERVAS objetivamente en la(s) imagen(es):
-   - Continuidad del labio superior (unilateral/bilateral, completo/incompleto).
-   - Afectación del reborde alveolar.
-   - Afectación del paladar duro y/o blando.
-   - Simetría nasal y deformidad asociada.
-   - Calidad y limitaciones de la imagen (ángulo, resolución, iluminación).
+Describe lo que OBSERVAS objetivamente en la imagen:
+- Continuidad del labio superior (unilateral/bilateral, completo/incompleto)
+- Afectación del reborde alveolar
+- Afectación del paladar duro y/o blando
+- Simetría nasal y deformidad asociada
+- Calidad y limitaciones de la imagen
 
-## 1. CLASIFICACIÓN CLÍNICA PROBABLE DEL CASO
-Identifica cuál de estas categorías corresponde:
+## 1. CLASIFICACIÓN CLÍNICA PROBABLE
+Identifica cuál categoría corresponde:
 - Labio Normal (sin hendidura)
-- Labio Leporino (LL) Unilateral Incompleto: hendidura parcial que no llega a la nariz
-- Labio Leporino (LL) Unilateral Completo: hendidura total hasta la nariz, un solo lado
-- Labio Leporino (LL) Bilateral: hendidura en ambos lados del labio
-- Labio y Paladar Hendido: compromiso de labio y paladar
+- Labio Leporino (LL) Unilateral Incompleto
+- Labio Leporino (LL) Unilateral Completo
+- Labio Leporino (LL) Bilateral
+- Labio y Paladar Hendido
 - No determinable (imagen insuficiente)
 
 ## 2. CARACTERÍSTICAS CLÍNICAS OBSERVADAS
-Describe brevemente los hallazgos visuales que justifican la clasificación.
+Hallazgos visuales que justifican la clasificación.
 
 ## 3. PRESUNTO DIAGNÓSTICO
-Nombre técnico del diagnóstico según clasificación de Veau o Kernahan.
+Nombre técnico según clasificación de Veau o Kernahan.
 
-## 4. PRÓNOSTICO QUIRÚRGICO/PLAN DE TRATAMIENTO ORIENTATIVO
-Estima el número aproximado total típico de intervenciones a lo largo del crecimiento y
-lista las intervenciones quirúrgicas recomendadas en orden cronológico:
+## 4. PLAN DE TRATAMIENTO ORIENTATIVO
 Tabla con:
-| Nombre del procedimiento | Número estimado de intervenciones de ese tipo | Objetivo |
+| Procedimiento | Número estimado | Objetivo |
 
 ## 5. CRONOGRAMA POR RANGO DE EDAD
 Tabla con:
-| Intervención | Rango de edad recomendado | Justificación |
+| Intervención | Rango de edad | Justificación |
 
 ## 6. NIVEL DE COMPLEJIDAD
-Califica:
-si el número de intervenciones es menor a dos intervenciones, el nivel de complejidad es baja
-si el número de intervenciones es entre tres intervenciones y cinco intervenciones, es complejidad media
-si es mayor a cinco intervenciones es de complejidad muy Alta
+- Menos de 2 intervenciones: BAJA
+- Entre 3 y 5 intervenciones: MEDIA
+- Más de 5 intervenciones: MUY ALTA
 
-Justifica brevemente el nivel de complejidad del tratamiento según
-- Extensión de la hendidura.
-- Unilateral vs bilateral.
-- Compromiso alveolar y nasal.
-- Necesidad de ortodoncia prolongada o cirugía ortognática.
-- Riesgo funcional (habla, alimentación, audición).
+Justifica brevemente considerando extensión, compromiso alveolar/nasal, necesidad de ortodoncia, riesgos funcionales.
 
 ## 7. CONSIDERACIONES ADICIONALES
-Menciona si se requiere: ortopedia prequirúrgica, fonoaudiología, ortodoncia, psicología u otro.
+Especialidades requeridas: ortopedia prequirúrgica, fonoaudiología, ortodoncia, psicología, etc.
 
-## 8. OTROS FACTORES Y ADVERTENCIAS
-Señala qué datos faltan (edad, antecedentes, exploración funcional).
-Explica cómo esos datos podrían cambiar el pronóstico.
+## 8. DATOS FALTANTES Y ADVERTENCIAS
+Señala qué información faltante podría cambiar el pronóstico.
 
 ---
-IMPORTANTE: este análisis se basa exclusivamente en la(s) imagen(es) proporcionada(s)
-y es una guía de apoyo para el médico tratante. No constituye un diagnóstico médico definitivo.
-Es fundamental una evaluación clínica completa y multidisciplinar por parte del equipo de FISULAB.
-No reemplaza el juicio clínico profesional ni el examen físico directo del paciente.
+IMPORTANTE: Este análisis es una guía de apoyo para el médico tratante. No constituye un
+diagnóstico médico definitivo. Es fundamental una evaluación clínica completa y multidisciplinar.
 """
 
-# ── FUNCIÓN: cargar imagen ─────────────────────────────────────
-def cargar_imagen(archivo_subido):
-    extension = Path(archivo_subido.name).suffix.lower()
-    mime_map = {
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".png": "image/png",
-        ".webp": "image/webp",
-        ".gif": "image/gif",
-    }
-    mime_type = mime_map.get(extension, "image/jpeg")
-    datos = archivo_subido.read()
-    return {"mime_type": mime_type, "data": datos}
-
-# ── FUNCIÓN: generar PDF ───────────────────────────────────────
-def generar_pdf(resultados):
+# ── FUNCIÓN: generar PDF ─────────────────────────────────────────────────────
+def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     pdf = FPDF()
+    pdf.add_page()
     pdf.set_margins(15, 15, 15)
-    for r in resultados:
-        pdf.add_page()
-        pdf.set_font("Arial", "B", 16)
-        pdf.cell(0, 10, "FISULAB - Informe de Apoyo Diagnostico", ln=True, align="C")
-        pdf.set_font("Arial", size=11)
-        pdf.cell(0, 8, f"Paciente: {r['nombre_paciente']}  |  Edad: {r['edad_paciente']}  |  Fecha: {datetime.today().strftime('%d/%m/%Y')}", ln=True)
-        pdf.cell(0, 8, f"Archivo: {r['nombre']}", ln=True)
-        pdf.ln(4)
-        pdf.set_font("Arial", "I", 9)
-        pdf.multi_cell(0, 5, "AVISO: Este informe es un apoyo de orientacion para el medico tratante. No constituye un diagnostico medico definitivo.")
-        pdf.ln(6)
-        pdf.set_font("Arial", size=11)
-        if r["error"]:
-            pdf.multi_cell(0, 6, f"ERROR: {r['error']}")
-        else:
-            pdf.multi_cell(0, 6, r["diagnostico"])
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "FISULAB - Informe de Apoyo Diagnostico", ln=True, align="C")
+    pdf.set_font("Arial", size=11)
+    pdf.cell(0, 8, f"Paciente: {paciente_id}  |  Edad: {paciente_edad}  |  Sexo: {paciente_sexo}", ln=True)
+    pdf.cell(0, 8, f"Fecha: {time.strftime('%d/%m/%Y')}", ln=True)
+    pdf.ln(4)
+    pdf.set_font("Arial", "I", 9)
+    pdf.multi_cell(0, 5, "AVISO: Este informe es un apoyo de orientacion para el medico tratante. No constituye un diagnostico medico definitivo.")
+    pdf.ln(6)
+    pdf.set_font("Arial", size=10)
+    pdf.multi_cell(0, 6, resultado_texto)
     return bytes(pdf.output())
 
-# ── CONFIGURACIÓN DE PÁGINA ────────────────────────────────────
-st.set_page_config(page_title="Fisulab - Apoyo Diagnóstico", page_icon="🏥")
+# ── ESTADO DE SESIÓN ─────────────────────────────────────────────────────────
+if "historial" not in st.session_state:
+    st.session_state.historial = []
+if "resultado" not in st.session_state:
+    st.session_state.resultado = None
+if "datos_paciente" not in st.session_state:
+    st.session_state.datos_paciente = {}
 
-# ── SESSION STATE: guarda el estado entre interacciones ────────
-if "reiniciar" not in st.session_state:
-    st.session_state.reiniciar = False
+# API key desde secrets o variable de entorno
+API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-# Si se pidió reiniciar, limpia el contador para forzar nuevos widgets
-if st.session_state.reiniciar:
-    st.session_state.reiniciar = False
-    st.session_state.paciente_id = st.session_state.get("paciente_id", 0) + 1
+# ── TOPBAR ───────────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="topbar">
+    <div>
+        <div class="topbar-title">🏥 FISULAB · IA Clínica</div>
+        <div class="topbar-sub">Apoyo diagnóstico — labio y paladar hendido</div>
+    </div>
+    <div class="topbar-badge">⚠️ No reemplaza diagnóstico médico</div>
+</div>
+""", unsafe_allow_html=True)
 
-if "paciente_id" not in st.session_state:
-    st.session_state.paciente_id = 0
+# ── LAYOUT PRINCIPAL ─────────────────────────────────────────────────────────
+col_izq, col_centro, col_der = st.columns([1.2, 2.5, 1.1])
 
-# ── ENCABEZADO + BOTÓN NUEVO PACIENTE ─────────────────────────
-col_titulo, col_boton = st.columns([3, 1])
-with col_titulo:
-    st.title("🏥 Fisulab — Apoyo de Diagnóstico con IA")
-    st.caption("Herramienta de orientación clínica. No reemplaza el criterio médico profesional.")
-with col_boton:
-    st.write("")
-    st.write("")
+# ════════════════════════════════════════════════════════════
+# COLUMNA IZQUIERDA
+# ════════════════════════════════════════════════════════════
+with col_izq:
+    st.markdown("#### 👤 Datos del paciente")
+    paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
+    paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
+    paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
+    tipo_imagen   = st.selectbox(
+        "Tipo de imagen",
+        ["Fotografía frontal", "Fotografía lateral", "Intraoral", "Radiografía panorámica"]
+    )
+
+    st.divider()
+
+    st.markdown("#### 📷 Imagen clínica")
+    imagen_file = st.file_uploader(
+        "Cargar imagen",
+        type=["jpg", "jpeg", "png", "webp"],
+        label_visibility="collapsed"
+    )
+
+    if imagen_file:
+        imagen_pil = Image.open(imagen_file)
+        st.image(imagen_pil, caption="Vista previa", use_container_width=True)
+
+    st.divider()
+
+    analizar = st.button(
+        "🔬 Analizar con IA",
+        use_container_width=True,
+        type="primary",
+        disabled=(not imagen_file or not API_KEY)
+    )
+
+    if not API_KEY:
+        st.caption("⚠️ API Key no configurada. Agrégala en Streamlit Secrets.")
+    if not imagen_file:
+        st.caption("⚠️ Carga una imagen para continuar.")
+
+    st.divider()
+
     if st.button("🆕 Nuevo paciente", use_container_width=True):
-        st.session_state.reiniciar = True
+        st.session_state.resultado = None
+        st.session_state.datos_paciente = {}
         st.rerun()
 
-st.divider()
+# ════════════════════════════════════════════════════════════
+# LÓGICA DE ANÁLISIS
+# ════════════════════════════════════════════════════════════
+if analizar and imagen_file and API_KEY:
+    try:
+        genai.configure(api_key=API_KEY)
+        model = genai.GenerativeModel("gemini-2.5-flash")
 
-# ── FORMULARIO (usa paciente_id como key para resetear) ───────
-pid = st.session_state.paciente_id
+        imagen_pil = Image.open(imagen_file)
+        buffer = io.BytesIO()
+        fmt = imagen_pil.format if imagen_pil.format else "JPEG"
+        imagen_pil.save(buffer, format=fmt)
+        imagen_bytes = buffer.getvalue()
 
-col1, col2 = st.columns(2)
-with col1:
-    nombre = st.text_input("Nombre del paciente", placeholder="Ej: Juan Pérez", key=f"nombre_{pid}")
-with col2:
-    edad = st.text_input("Edad del paciente", placeholder="Ej: 3 meses", key=f"edad_{pid}")
+        contexto_paciente = f"""
+Datos del paciente:
+- ID / Nombre: {paciente_id if paciente_id else 'No proporcionado'}
+- Edad: {paciente_edad if paciente_edad else 'No proporcionada'}
+- Sexo: {paciente_sexo}
+- Tipo de imagen: {tipo_imagen}
+"""
+        prompt_completo = contexto_paciente + "\n\n" + PROMPT_MEDICO
 
-fotos = st.file_uploader(
-    "Sube las fotografías del paciente",
-    type=["jpg", "jpeg", "png", "webp"],
-    accept_multiple_files=True,
-    help="Puedes seleccionar varias fotos a la vez",
-    key=f"fotos_{pid}"
-)
+        mime_map = {
+            "JPEG": "image/jpeg", "JPG": "image/jpeg",
+            "PNG": "image/png", "WEBP": "image/webp"
+        }
+        mime_type = mime_map.get(fmt.upper(), "image/jpeg")
 
-if fotos:
-    st.write(f"📁 {len(fotos)} imagen(es) cargada(s):")
-    cols = st.columns(min(len(fotos), 4))
-    for i, foto in enumerate(fotos):
-        with cols[i % 4]:
-            st.image(foto, caption=foto.name, use_container_width=True)
+        with col_centro:
+            with st.spinner("Analizando imagen con IA... esto puede tomar unos segundos."):
+                response = model.generate_content([
+                    prompt_completo,
+                    {"mime_type": mime_type, "data": imagen_bytes}
+                ])
+                st.session_state.resultado = response.text
+                st.session_state.datos_paciente = {
+                    "id": paciente_id or f"Caso {len(st.session_state.historial)+1}",
+                    "edad": paciente_edad or "No especificada",
+                    "sexo": paciente_sexo,
+                }
 
-st.divider()
+                # Detectar complejidad para el historial
+                texto = response.text.upper()
+                if "MUY ALTA" in texto or "MUY ALTO" in texto:
+                    comp = "alta"
+                elif "MEDIA" in texto:
+                    comp = "media"
+                else:
+                    comp = "baja"
 
-# ── BOTÓN GENERAR ──────────────────────────────────────────────
-if fotos and st.button("🔍 Generar informes", type="primary", use_container_width=True):
-
-    resultados = []
-    progreso = st.progress(0, text="Iniciando análisis...")
-
-    for i, foto in enumerate(fotos):
-        progreso.progress(i / len(fotos), text=f"Analizando {foto.name}...")
-        with st.expander(f"📷 {foto.name}", expanded=True):
-            try:
-                imagen = cargar_imagen(foto)
-                response = model.generate_content([PROMPT_MEDICO, imagen])
-                diagnostico = response.text
-                st.markdown(diagnostico)
-                resultados.append({
-                    "nombre": foto.name,
-                    "nombre_paciente": nombre or "No especificado",
-                    "edad_paciente": edad or "No especificada",
-                    "diagnostico": diagnostico,
-                    "error": None
-                })
-                st.success("✅ Informe generado")
-            except Exception as e:
-                msg = str(e)
-                st.error(f"❌ Error: {msg}")
-                resultados.append({
-                    "nombre": foto.name,
-                    "nombre_paciente": nombre or "No especificado",
-                    "edad_paciente": edad or "No especificada",
-                    "diagnostico": None,
-                    "error": msg
+                st.session_state.historial.insert(0, {
+                    "nombre": paciente_id or f"Caso {len(st.session_state.historial)+1}",
+                    "fecha": time.strftime("%d %b %Y"),
+                    "complejidad": comp
                 })
 
-    progreso.progress(1.0, text="¡Análisis completado!")
-    exitosas = sum(1 for r in resultados if not r["error"])
-    st.divider()
-    st.write(f"**Resumen:** {exitosas} de {len(resultados)} imágenes procesadas correctamente.")
+    except Exception as e:
+        with col_centro:
+            st.error(f"❌ Error al conectar con la API: {str(e)}")
 
-    if exitosas > 0:
-        pdf_bytes = generar_pdf(resultados)
-        st.download_button(
-            label="📄 Descargar todos los informes en PDF",
-            data=pdf_bytes,
-            file_name=f"informes_fisulab_{nombre or 'paciente'}_{datetime.today().strftime('%d%m%Y')}.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
+# ════════════════════════════════════════════════════════════
+# COLUMNA CENTRO — Resultados
+# ════════════════════════════════════════════════════════════
+with col_centro:
 
-elif not fotos:
-    st.info("👆 Sube una o varias fotografías para comenzar el análisis.")
+    if st.session_state.resultado is None:
+        st.markdown("""
+        <div style="
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 400px; text-align: center;
+        ">
+            <div style="font-size: 48px; margin-bottom: 16px;">🔬</div>
+            <div style="font-size: 16px; font-weight: 500; color: #6c757d;">Sin análisis aún</div>
+            <div style="font-size: 13px; margin-top: 8px; max-width: 280px; line-height: 1.6; color: #adb5bd;">
+                Carga una imagen clínica y presiona <strong>Analizar con IA</strong>
+                para obtener el informe diagnóstico orientativo.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    else:
+        st.markdown("### 📋 Informe clínico IA")
+
+        resultado_texto = st.session_state.resultado
+        datos = st.session_state.datos_paciente
+
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.metric("Modelo usado", "Gemini 2.5 Flash")
+        with m2:
+            texto_up = resultado_texto.upper()
+            if "MUY ALTA" in texto_up or "MUY ALTO" in texto_up:
+                st.markdown('<div class="metric-card"><div class="metric-value" style="color:#A32D2D">Alta</div><div class="metric-label">Complejidad estimada</div></div>', unsafe_allow_html=True)
+            elif "MEDIA" in texto_up:
+                st.markdown('<div class="metric-card"><div class="metric-value" style="color:#854F0B">Media</div><div class="metric-label">Complejidad estimada</div></div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="metric-card"><div class="metric-value" style="color:#3B6D11">Baja</div><div class="metric-label">Complejidad estimada</div></div>', unsafe_allow_html=True)
+        with m3:
+            st.metric("Tipo análisis", "Imagen + Prompt")
+
+        st.divider()
+
+        with st.container(height=500):
+            st.markdown(resultado_texto)
+
+        st.divider()
+
+        b1, b2, b3 = st.columns(3)
+        with b1:
+            # Exportar como TXT
+            st.download_button(
+                label="⬇️ Exportar TXT",
+                data=resultado_texto,
+                file_name=f"fisulab_{datos.get('id','caso')}_{time.strftime('%Y%m%d')}.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+        with b2:
+            # Exportar como PDF
+            pdf_bytes = generar_pdf(
+                datos.get("id", "No especificado"),
+                datos.get("edad", "No especificada"),
+                datos.get("sexo", "No especificado"),
+                resultado_texto
+            )
+            st.download_button(
+                label="📄 Exportar PDF",
+                data=pdf_bytes,
+                file_name=f"fisulab_{datos.get('id','caso')}_{time.strftime('%Y%m%d')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
+        with b3:
+            if st.button("🔄 Nuevo análisis", use_container_width=True):
+                st.session_state.resultado = None
+                st.rerun()
+
+        st.markdown("""
+        <div class="disclaimer">
+            <strong>⚠️ Aviso importante:</strong> Este análisis es una orientación de apoyo
+            basada exclusivamente en imagen fotográfica. No constituye diagnóstico médico definitivo.
+            La clasificación y el plan de tratamiento deben ser validados por el equipo clínico
+            multidisciplinar de FISULAB mediante evaluación presencial completa.
+        </div>
+        """, unsafe_allow_html=True)
+
+# ════════════════════════════════════════════════════════════
+# COLUMNA DERECHA — Historial y estadísticas
+# ════════════════════════════════════════════════════════════
+with col_der:
+    tab1, tab2 = st.tabs(["📁 Historial", "📊 Estadísticas"])
+
+    with tab1:
+        st.markdown("")
+        if not st.session_state.historial:
+            st.caption("Aún no hay casos analizados.")
+        else:
+            badge_map = {
+                "alta":  '<span class="badge-alta">Complejidad alta</span>',
+                "media": '<span class="badge-media">Complejidad media</span>',
+                "baja":  '<span class="badge-baja">Complejidad baja</span>',
+            }
+            for caso in st.session_state.historial[:8]:
+                badge = badge_map.get(caso["complejidad"], "")
+                st.markdown(f"""
+                <div class="caso-card">
+                    <div class="caso-nombre">🗂️ {caso['nombre']}</div>
+                    <div class="caso-fecha">📅 {caso['fecha']}</div>
+                    <div style="margin-top:6px">{badge}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+    with tab2:
+        st.markdown("")
+        total  = len(st.session_state.historial)
+        altas  = sum(1 for c in st.session_state.historial if c["complejidad"] == "alta")
+        medias = sum(1 for c in st.session_state.historial if c["complejidad"] == "media")
+        bajas  = sum(1 for c in st.session_state.historial if c["complejidad"] == "baja")
+
+        st.metric("Total de casos", total)
+        st.metric("Complejidad alta",  altas)
+        st.metric("Complejidad media", medias)
+        st.metric("Complejidad baja",  bajas)
+
+        if total > 0:
+            st.divider()
+            tipo_frecuente = max(
+                [("Alta", altas), ("Media", medias), ("Baja", bajas)],
+                key=lambda x: x[1]
+            )
+            st.markdown(f"""
+            <div style="background:#E1F5EE;border-radius:8px;padding:10px 12px;">
+                <div style="font-size:13px;font-weight:600;color:#085041">Complejidad más frecuente</div>
+                <div style="font-size:12px;color:#0F6E56;margin-top:4px">
+                    {tipo_frecuente[0]} · {tipo_frecuente[1]} caso(s)
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+# ── PIE DE PÁGINA ─────────────────────────────────────────────────────────────
+st.divider()
+st.markdown("""
+<div style="text-align:center;color:#adb5bd;font-size:12px;padding:8px 0;">
+    FISULAB · IA Clínica · Proyecto académico — Especialización en Datos e IA · 2026<br>
+    <span style="color:#dc3545">Este sistema es experimental. No usar como único criterio diagnóstico.</span>
+</div>
+""", unsafe_allow_html=True)
