@@ -105,7 +105,8 @@ def generar_pdf(resultados):
         pdf.set_font("Arial", "B", 16)
         pdf.cell(0, 10, "FISULAB - Informe de Apoyo Diagnostico", ln=True, align="C")
         pdf.set_font("Arial", size=11)
-        pdf.cell(0, 8, f"Archivo: {r['nombre']}  |  Fecha: {datetime.today().strftime('%d/%m/%Y')}", ln=True)
+        pdf.cell(0, 8, f"Paciente: {r['nombre_paciente']}  |  Edad: {r['edad_paciente']}  |  Fecha: {datetime.today().strftime('%d/%m/%Y')}", ln=True)
+        pdf.cell(0, 8, f"Archivo: {r['nombre']}", ln=True)
         pdf.ln(4)
         pdf.set_font("Arial", "I", 9)
         pdf.multi_cell(0, 5, "AVISO: Este informe es un apoyo de orientacion para el medico tratante. No constituye un diagnostico medico definitivo.")
@@ -124,6 +125,12 @@ st.set_page_config(page_title="Fisulab - Apoyo Diagnóstico", page_icon="🏥")
 st.title("🏥 Fisulab — Apoyo de Diagnóstico con IA")
 st.caption("Herramienta de orientación clínica. No reemplaza el criterio médico profesional.")
 st.divider()
+
+col1, col2 = st.columns(2)
+with col1:
+    nombre = st.text_input("Nombre del paciente", placeholder="Ej: Juan Pérez")
+with col2:
+    edad = st.text_input("Edad del paciente", placeholder="Ej: 3 meses")
 
 fotos = st.file_uploader(
     "Sube las fotografías de los pacientes",
@@ -155,13 +162,13 @@ if fotos and st.button("🔍 Generar informes", type="primary", use_container_wi
                 response = model.generate_content([PROMPT_MEDICO, imagen])
                 diagnostico = response.text
                 st.markdown(diagnostico)
-                resultados.append({"nombre": foto.name, "diagnostico": diagnostico, "error": None})
+                resultados.append({"nombre": foto.name, "nombre_paciente": nombre or "No especificado", "edad_paciente": edad or "No especificada", "diagnostico": diagnostico, "error": None})
                 st.success("✅ Informe generado")
 
             except Exception as e:
                 msg = str(e)
                 st.error(f"❌ Error: {msg}")
-                resultados.append({"nombre": foto.name, "diagnostico": None, "error": msg})
+                resultados.append({"nombre": foto.name, "nombre_paciente": nombre or "No especificado", "edad_paciente": edad or "No especificada", "diagnostico": None, "error": msg})
 
     progreso.progress(1.0, text="¡Análisis completado!")
 
