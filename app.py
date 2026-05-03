@@ -132,17 +132,86 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_margins(15, 15, 15)
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "FISULAB - Informe de Apoyo Diagnostico", ln=True, align="C")
-    pdf.set_font("Arial", size=11)
-    pdf.cell(0, 8, f"Paciente: {paciente_id}  |  Edad: {paciente_edad}  |  Sexo: {paciente_sexo}", ln=True)
-    pdf.cell(0, 8, f"Fecha: {time.strftime('%d/%m/%Y')}", ln=True)
-    pdf.ln(4)
-    pdf.set_font("Arial", "I", 9)
-    pdf.multi_cell(0, 5, "AVISO: Este informe es un apoyo de orientacion para el medico tratante. No constituye un diagnostico medico definitivo.")
-    pdf.ln(6)
+
+    # ── ENCABEZADO CON LOGO ──────────────────────────────────────
+    # Verifica si el archivo del logo existe antes de intentar cargarlo.
+    # Esto evita errores si el archivo no está en la carpeta.
+    logo_path = "fisulab.png"
+    if os.path.exists(logo_path):
+        # Inserta el logo en la esquina superior izquierda.
+        # x=15, y=10 → posición desde el borde (en mm)
+        # w=28      → ancho del logo en mm (ajusta si lo quieres más grande/pequeño)
+        # h=0       → alto en 0 para que FPDF calcule la proporción automáticamente
+        pdf.image(logo_path, x=15, y=10, w=28, h=0)
+
+    # ── NOMBRE DE LA INSTITUCIÓN (al lado del logo) ───────────────
+    # Mueve el cursor a la derecha del logo para escribir el nombre
+    pdf.set_xy(48, 14)
+    pdf.set_font("Arial", "B", 15)
+    pdf.set_text_color(74, 140, 40)   # verde institucional de Fisulab (#4A8C28)
+    pdf.cell(0, 7, "FISULAB", ln=True)
+
+    pdf.set_xy(48, 22)
+    pdf.set_font("Arial", size=9)
+    pdf.set_text_color(100, 100, 100)  # gris para el subtítulo
+    pdf.cell(0, 5, "Fundación de Atención Integral para Labio y Paladar Hendido", ln=True)
+
+    # ── LÍNEA SEPARADORA VERDE ────────────────────────────────────
+    # Baja el cursor debajo del logo (mínimo y=42 para no tapar el logo de 28mm)
+    pdf.set_y(42)
+    pdf.set_draw_color(74, 140, 40)    # color verde para la línea
+    pdf.set_line_width(0.8)
+    pdf.line(15, 42, 195, 42)          # línea horizontal de margen a margen
+    pdf.ln(6)                          # espacio después de la línea
+
+    # ── TÍTULO DEL INFORME ────────────────────────────────────────
+    pdf.set_font("Arial", "B", 14)
+    pdf.set_text_color(8, 80, 65)      # verde oscuro #085041
+    pdf.cell(0, 9, "Informe de Apoyo Diagnostico - IA Clinica", ln=True, align="C")
+    pdf.ln(2)
+
+    # ── DATOS DEL PACIENTE ────────────────────────────────────────
     pdf.set_font("Arial", size=10)
-    pdf.multi_cell(0, 6, resultado_texto)
+    pdf.set_text_color(50, 50, 50)
+    pdf.cell(0, 7, f"Paciente: {paciente_id}   |   Edad: {paciente_edad}   |   Sexo: {paciente_sexo}", ln=True)
+    pdf.cell(0, 7, f"Fecha de generacion: {time.strftime('%d/%m/%Y %H:%M')}", ln=True)
+    pdf.ln(3)
+
+    # ── LÍNEA SEPARADORA GRIS ─────────────────────────────────────
+    pdf.set_draw_color(200, 200, 200)
+    pdf.set_line_width(0.4)
+    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+    pdf.ln(5)
+
+    # ── AVISO LEGAL ───────────────────────────────────────────────
+    pdf.set_font("Arial", "I", 8)
+    pdf.set_text_color(150, 100, 0)
+    pdf.multi_cell(0, 5,
+        "AVISO: Este informe es una orientacion de apoyo basada en imagen fotografica. "
+        "No constituye un diagnostico medico definitivo. Debe ser validado por el equipo "
+        "clinico multidisciplinar de FISULAB mediante evaluacion presencial completa."
+    )
+    pdf.ln(5)
+
+    # ── CONTENIDO DEL DIAGNÓSTICO ─────────────────────────────────
+    pdf.set_font("Arial", size=10)
+    pdf.set_text_color(30, 30, 30)
+    # encode latin-1 reemplaza caracteres especiales que FPDF no soporta (tildes, ñ)
+    texto_limpio = resultado_texto.encode("latin-1", errors="replace").decode("latin-1")
+    pdf.multi_cell(0, 6, texto_limpio)
+    pdf.ln(8)
+
+    # ── PIE DE PÁGINA ─────────────────────────────────────────────
+    pdf.set_y(-20)                     # posición a 20mm del borde inferior
+    pdf.set_draw_color(74, 140, 40)
+    pdf.set_line_width(0.5)
+    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+    pdf.ln(3)
+    pdf.set_font("Arial", "I", 8)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 5, f"FISULAB · IA Clinica · Generado el {time.strftime('%d/%m/%Y')} · Pagina {pdf.page_no()}",
+             align="C")
+
     return bytes(pdf.output())
 
 # ── ESTADO DE SESIÓN ─────────────────────────────────────────────────────────
