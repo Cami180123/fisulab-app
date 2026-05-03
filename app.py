@@ -11,6 +11,16 @@ from fpdf import FPDF
 import io
 import os
 import time
+import base64
+
+# ── FUNCIÓN LOGO ── 
+def get_logo_base64(path="fisulab.png"):
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return None
+
+
 
 # ── CONFIGURACIÓN DE PÁGINA ──────────────────────────────────────────────────
 st.set_page_config(
@@ -24,46 +34,95 @@ st.set_page_config(
 st.markdown("""
 <style>
 html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
+
+/* ── TOPBAR ── */
 .topbar {
-    background: #085041; padding: 14px 24px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
-.topbar-title { color: white; font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
-.topbar-sub { color: #9FE1CB; font-size: 13px; margin-top: 2px; }
+.topbar-title {
+    color: #085041;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+.topbar-sub {
+    color: #6c757d;
+    font-size: 12px;
+    margin-top: 2px;
+}
 .topbar-badge {
-    background: #FAEEDA; color: #854F0B;
-    padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    background: #fff8e1;
+    color: #854F0B;
+    border: 1px solid #f9cb42;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
 }
+
+/* ── MÉTRICAS ── */
 .metric-card {
-    background: #f8f9fa; border: 1px solid #e9ecef;
-    border-radius: 10px; padding: 16px 20px; text-align: center;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 16px 20px;
+    text-align: center;
 }
 .metric-value { font-size: 26px; font-weight: 700; color: #085041; }
 .metric-label { font-size: 12px; color: #6c757d; margin-top: 4px; }
+
+/* ── BADGES DE COMPLEJIDAD ── */
 .badge-alta {
     background: #FCEBEB; color: #A32D2D;
-    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 500; display: inline-block;
 }
 .badge-media {
     background: #FAEEDA; color: #854F0B;
-    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 500; display: inline-block;
 }
 .badge-baja {
     background: #EAF3DE; color: #3B6D11;
-    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 500; display: inline-block;
 }
+
+/* ── AVISO LEGAL ── */
 .disclaimer {
-    background: #FAEEDA; border-left: 4px solid #EF9F27;
-    border-radius: 6px; padding: 12px 16px;
-    font-size: 13px; color: #633806; line-height: 1.6; margin-top: 16px;
+    background: #fff8e1;
+    border-left: 4px solid #f9cb42;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #633806;
+    line-height: 1.6;
+    margin-top: 16px;
 }
+
+/* ── TARJETAS HISTORIAL ── */
 .caso-card {
-    background: white; border: 1px solid #e9ecef;
-    border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
 }
 .caso-nombre { font-size: 13px; font-weight: 600; color: #212529; }
-.caso-fecha { font-size: 11px; color: #6c757d; }
-#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
+.caso-fecha  { font-size: 11px; color: #6c757d; }
+
+/* ── OCULTAR ELEMENTOS DE STREAMLIT ── */
+#MainMenu {visibility: hidden;}
+footer     {visibility: hidden;}
+header     {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -226,11 +285,33 @@ if "datos_paciente" not in st.session_state:
 API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # ── TOPBAR ───────────────────────────────────────────────────────────────────
-st.markdown("""
+# Lee el logo y conviértelo a base64 para incrustarlo directo en el HTML.
+# Base64 es necesario porque Streamlit no sirve archivos locales directamente en HTML.
+import base64
+
+def get_logo_base64(path="fisulab.png"):
+    """Convierte el logo a texto base64 para usarlo en HTML inline."""
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return None
+
+logo_b64 = get_logo_base64()
+
+# Construye el HTML del logo: si existe muestra la imagen, si no un ícono de texto.
+if logo_b64:
+    logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="height:52px; width:auto; object-fit:contain;">'
+else:
+    logo_html = '<div style="width:52px;height:52px;background:#1D9E75;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;">F</div>'
+
+st.markdown(f"""
 <div class="topbar">
-    <div>
-        <div class="topbar-title">🏥 FISULAB · IA Clínica</div>
-        <div class="topbar-sub">Apoyo diagnóstico — labio y paladar hendido</div>
+    <div style="display:flex; align-items:center; gap:14px;">
+        {logo_html}
+        <div>
+            <div class="topbar-title">FISULAB · IA Clínica</div>
+            <div class="topbar-sub">Apoyo diagnóstico — labio y paladar hendido</div>
+        </div>
     </div>
     <div class="topbar-badge">⚠️ No reemplaza diagnóstico médico</div>
 </div>
