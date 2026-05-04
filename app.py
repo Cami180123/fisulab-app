@@ -597,8 +597,6 @@ with b1:
         use_container_width=True
     )
 
-            )
-
         # Botón 2 — Limpiar resultado y volver al estado vacío.
         # st.rerun() reinicia la app manteniendo session_state,
         # por eso primero se pone resultado en None y luego se relanza.
