@@ -428,7 +428,6 @@ Datos del paciente:
         with col_centro:
             st.error(f"❌ Error al conectar con la API: {str(e)}")
 
-
 # ════════════════════════════════════════════════════════════
 # COLUMNA CENTRO — Panel de resultados
 # ════════════════════════════════════════════════════════════
@@ -436,15 +435,8 @@ with col_centro:
 
     if st.session_state.resultado is None:
         st.markdown("""
-        <div style="
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            justify-content:center;
-            height:400px;
-            color:#adb5bd;
-            text-align:center;
-        ">
+        <div style="display:flex;flex-direction:column;align-items:center;
+                    justify-content:center;height:400px;color:#adb5bd;text-align:center;">
             <div style="font-size:48px;">🔬</div>
             <div style="font-size:16px;font-weight:500;color:#6c757d">
                 Sin análisis aún
@@ -456,7 +448,6 @@ with col_centro:
         """, unsafe_allow_html=True)
 
     else:
-        # ── PREPARACIÓN DEL RESULTADO ─────────────────────────
         resultado_texto = st.session_state.resultado
         texto_upper = resultado_texto.upper()
 
@@ -506,14 +497,9 @@ with col_centro:
         st.divider()
 
         st.markdown("### 🔬 Clasificación diferencial")
-        st.markdown("**LL unilateral completo**")
-        st.progress(0.87)
-
-        st.markdown("**Labio + paladar hendido**")
-        st.progress(0.09)
-
-        st.markdown("**LL unilateral incompleto**")
-        st.progress(0.04)
+        st.progress(0.87, text="LL unilateral completo")
+        st.progress(0.09, text="Labio + paladar hendido")
+        st.progress(0.04, text="LL unilateral incompleto")
 
         st.divider()
 
@@ -529,7 +515,8 @@ with col_centro:
         for edad, proc, obj in timeline:
             st.markdown(
                 f"""
-                <div style="border-left:4px solid #0F6E56;padding-left:12px;margin-bottom:10px">
+                <div style="border-left:4px solid #0F6E56;
+                            padding-left:12px;margin-bottom:10px">
                     <strong>{edad}</strong><br>
                     {proc}<br>
                     <span style="font-size:12px;color:#6c757d">
@@ -546,108 +533,38 @@ with col_centro:
         with st.container(height=350):
             st.markdown(resultado_texto)
 
-        
-        # ── SEPARADOR VISUAL ──────────────────────────────────
         st.divider()
 
-        # ── SECCIÓN 2: INFORME COMPLETO CON SCROLL ────────────
-        # Contenedor con altura fija de 500px y scroll interno.
-        # Renderiza el Markdown completo que devuelve Gemini,
-        # incluyendo las 8 secciones del prompt médico con
-        # sus tablas, listas y texto estructurado.
-        
-st.divider()
-st.markdown("### 🗓️ Cronograma orientativo de tratamiento")
-
-timeline = [
-    ("3 – 6 meses", "Queiloplastia", "Corrección del labio y cierre funcional"),
-    ("12 – 18 meses", "Palatoplastia", "Optimizar función del habla"),
-    ("7 – 9 años", "Injerto óseo alveolar", "Soporte dentario y oclusión"),
-    ("14 – 18 años", "Rinoplastia secundaria", "Mejorar forma y función nasal"),
-]
-
-for edad, procedimiento, objetivo in timeline:
-    st.markdown(f"""
-    <div style="
-        border-left:4px solid #0F6E56;
-        padding-left:12px;
-        margin-bottom:12px;
-    ">
-        <strong>{edad}</strong><br>
-        {procedimiento}<br>
-        <span style="font-size:12px;color:#6c757d">
-            Objetivo: {objetivo}
-        </span>
-    </div>
-    """, unsafe_allow_html=True
-               )
-
-st.divider()
-st.markdown("### 📄 Informe clínico completo")
-
-with st.container(height=400):
-    st.markdown(resultado_texto)
-
-
-        # ── SEPARADOR VISUAL ──────────────────────────────────
-        #st.divider()
-
-        # ── SECCIÓN 3: BOTONES DE ACCIÓN ─────────────────────
-        # Tres botones en fila para las acciones principales
-        # una vez obtenido el resultado.
         b1, b2, b3 = st.columns(3)
 
-        # Botón 1 — Exportar informe como archivo .txt
-        # Usa st.download_button para generar la descarga
-        # directamente en el navegador sin servidor adicional.
-        # El nombre del archivo incluye el ID del paciente y la fecha.
-        
-with b1:
-    pdf_bytes = generar_pdf(
-        paciente_id or "Caso IA",
-        paciente_edad or "No especificada",
-        paciente_sexo,
-        resultado_texto
-    )
-    st.download_button(
-        label="📄 Exportar PDF clínico",
-        data=pdf_bytes,
-        file_name=f"fisulab_informe_{time.strftime('%Y%m%d')}.pdf",
-        mime="application/pdf",
-        use_container_width=True
-    )
+        with b1:
+            pdf_bytes = generar_pdf(
+                paciente_id or "Caso IA",
+                paciente_edad or "No especificada",
+                paciente_sexo,
+                resultado_texto
+            )
+            st.download_button(
+                "📄 Exportar PDF clínico",
+                data=pdf_bytes,
+                file_name=f"fisulab_{time.strftime('%Y%m%d')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
 
-        # Botón 2 — Limpiar resultado y volver al estado vacío.
-        # st.rerun() reinicia la app manteniendo session_state,
-        # por eso primero se pone resultado en None y luego se relanza.
         with b2:
             if st.button("🔄 Nuevo análisis", use_container_width=True):
                 st.session_state.resultado = None
                 st.rerun()
 
-        # Botón 3 — Integración futura con base de datos.
-        # Deshabilitado (disabled=True) hasta que se conecte
-        # con el sistema de gestión de FISULAB.
         with b3:
-            st.button(
-                "💾 Guardar en sistema",
-                use_container_width=True,
-                disabled=True,
-                help="Función de integración con base de datos — próximamente"
-            )
+            st.button("💾 Guardar en sistema", use_container_width=True, disabled=True)
 
-        # ── SECCIÓN 4: DISCLAIMER ÉTICO ──────────────────────
-        # Aviso permanente y visible en color amarillo/ámbar.
-        # Obligatorio en toda interfaz de IA clínica.
-        # Recuerda al médico que el resultado es orientativo,
-        # no un diagnóstico definitivo.
         st.markdown("""
         <div class="disclaimer">
-            <strong>⚠️ Aviso importante:</strong> Este análisis es una orientación de apoyo
-            basada exclusivamente en imagen fotográfica. No constituye diagnóstico médico definitivo.
-            La clasificación y el plan de tratamiento deben ser validados por el equipo clínico
-            multidisciplinar de FISULAB mediante evaluación presencial completa. El modelo puede
-            presentar limitaciones según la calidad, ángulo e iluminación de la imagen.
+            <strong>⚠️ Aviso importante:</strong>
+            Este análisis es una orientación basada en imagen.
+            No constituye diagnóstico médico definitivo.
         </div>
         """, unsafe_allow_html=True)
 
