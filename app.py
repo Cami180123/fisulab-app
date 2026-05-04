@@ -543,6 +543,7 @@ with col_centro:
         resultado_texto = st.session_state.resultado
         texto_upper = resultado_texto.upper()
 
+        # ── Complejidad ──
         if "MUY ALTA" in texto_upper or "MUY ALTO" in texto_upper:
             complejidad = "MUY ALTA"
             color_comp = "#A32D2D"
@@ -555,99 +556,45 @@ with col_centro:
 
         confianza_modelo = 85
 
-st.markdown("### 📌 Resumen clínico IA")
+        st.markdown("### 📌 Resumen clínico IA")
 
-c1, c2, c3 = st.columns(3)
+        c1, c2, c3 = st.columns(3)
 
-# ── TARJETA 1: Clasificación ─────────────────────
-with c1:
-    st.markdown("""
-    <div class="metric-card">
-        <div class="metric-label">Clasificación probable</div>
-        <div class="metric-value">
-            Labio<br>leporino<br>unilateral
-        </div>
-        <div class="metric-label">Veau / Kernahan</div>
-    </div>
-    """, unsafe_allow_html=True)
+        with c1:
+            st.markdown("""
+            <div class="metric-card">
+                <div class="metric-label">Clasificación probable</div>
+                <div class="metric-value">Labio<br>leporino<br>unilateral</div>
+                <div class="metric-label">Veau / Kernahan</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-# ── TARJETA 2: Complejidad ───────────────────────
-with c2:
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Complejidad estimada</div>
-        <div class="metric-value" style="color:{color_comp}">
-            {complejidad}
-        </div>
-        <div class="metric-label">Nivel clínico</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ── TARJETA 3: Confianza del modelo ──────────────
-with c3:
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Confianza del modelo</div>
-
-        <div style="
-            width:100%;
-            height:8px;
-            background:#e9ecef;
-            border-radius:6px;
-            overflow:hidden;
-            margin:8px 0;
-        ">
-            <div style="
-                width:{confianza_modelo}%;
-                height:100%;
-                background:#1d7af3;
-            "></div>
-        </div>
-
-        <div style="
-            font-size:15px;
-            font-weight:700;
-            color:#1d7af3;
-        ">
-            {confianza_modelo} %
-        </div>
-
-        <div class="metric-label">
-            Resultado orientativo · Requiere validación clínica
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-        st.markdown("### 🔬 Clasificación diferencial")
-        st.progress(0.87, text="LL unilateral completo")
-        st.progress(0.09, text="Labio + paladar hendido")
-        st.progress(0.04, text="LL unilateral incompleto")
-
-        st.divider()
-
-        st.markdown("### 🗓️ Cronograma orientativo de tratamiento")
-
-        timeline = [
-            ("3–6 meses", "Queiloplastia", "Corrección del labio"),
-            ("12–18 meses", "Palatoplastia", "Función del habla"),
-            ("7–9 años", "Injerto óseo alveolar", "Soporte dentario"),
-            ("14–18 años", "Rinoplastia secundaria", "Estética y función"),
-        ]
-
-        for edad, proc, obj in timeline:
-            st.markdown(
-                f"""
-                <div style="border-left:4px solid #0F6E56;
-                            padding-left:12px;margin-bottom:10px">
-                    <strong>{edad}</strong><br>
-                    {proc}<br>
-                    <span style="font-size:12px;color:#6c757d">
-                        Objetivo: {obj}
-                    </span>
+        with c2:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">Complejidad estimada</div>
+                <div class="metric-value" style="color:{color_comp}">
+                    {complejidad}
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+            </div>
+            """, unsafe_allow_html=True)
+
+        with c3:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">Confianza del modelo</div>
+                <div style="width:100%;height:8px;background:#e9ecef;border-radius:6px;">
+                    <div style="width:{confianza_modelo}%;
+                                height:8px;background:#1d7af3;"></div>
+                </div>
+                <div style="font-weight:700;color:#1d7af3">
+                    {confianza_modelo} %
+                </div>
+                <div class="metric-label">
+                    Resultado orientativo · Requiere validación
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         st.divider()
 
@@ -655,32 +602,20 @@ with c3:
         with st.container(height=350):
             st.markdown(resultado_texto)
 
-        st.divider()
+        pdf_bytes = generar_pdf(
+            paciente_id or "Caso IA",
+            paciente_edad or "No especificada",
+            paciente_sexo,
+            resultado_texto
+        )
 
-        b1, b2, b3 = st.columns(3)
-
-        with b1:
-            pdf_bytes = generar_pdf(
-                paciente_id or "Caso IA",
-                paciente_edad or "No especificada",
-                paciente_sexo,
-                resultado_texto
-            )
-            st.download_button(
-                "📄 Exportar PDF clínico",
-                data=pdf_bytes,
-                file_name=f"fisulab_{time.strftime('%Y%m%d')}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-
-        with b2:
-            if st.button("🔄 Nuevo análisis", use_container_width=True):
-                st.session_state.resultado = None
-                st.rerun()
-
-        with b3:
-            st.button("💾 Guardar en sistema", use_container_width=True, disabled=True)
+        st.download_button(
+            "📄 Exportar PDF clínico",
+            data=pdf_bytes,
+            file_name=f"fisulab_{time.strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
 
         st.markdown("""
         <div class="disclaimer">
