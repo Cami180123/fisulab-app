@@ -559,7 +559,8 @@ for edad, procedimiento, objetivo in timeline:
             Objetivo: {objetivo}
         </span>
     </div>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True
+               )
 
 st.divider()
 st.markdown("### 📄 Informe clínico completo")
