@@ -439,8 +439,7 @@ with col_izq:
         imagen_pil = Image.open(imagen_file)
         st.image(imagen_pil, caption="Vista previa", use_container_width=True)
 
-    st.divider()
-
+  
     analizar = st.button(
         "🔬 Analizar con IA",
         use_container_width=True,
