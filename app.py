@@ -1,5 +1,5 @@
 """
-FISULAB · IA Clínica
+FISULAB · IA PARA APOYO DIAGNÓSTICO ClÍNICO
 Dashboard de apoyo diagnóstico para labio y paladar hendido
 Requiere: pip install streamlit google-generativeai pillow fpdf2
 """
@@ -429,15 +429,23 @@ Datos del paciente:
             st.error(f"❌ Error al conectar con la API: {str(e)}")
 
 # ════════════════════════════════════════════════════════════
-# COLUMNA CENTRO — Resultados
+# COLUMNA CENTRO — Panel de resultados
 # ════════════════════════════════════════════════════════════
 with col_centro:
 
+    # ── ESTADO VACÍO ─────────────────────────────────────────
+    # Se muestra cuando aún no hay ningún análisis realizado.
+    # Desaparece en cuanto st.session_state.resultado tiene contenido.
     if st.session_state.resultado is None:
         st.markdown("""
         <div style="
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; height: 400px; text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: #adb5bd;
+            text-align: center;
         ">
             <div style="font-size: 48px; margin-bottom: 16px;">🔬</div>
             <div style="font-size: 16px; font-weight: 500; color: #6c757d;">Sin análisis aún</div>
@@ -449,68 +457,112 @@ with col_centro:
         """, unsafe_allow_html=True)
 
     else:
+        # ── TÍTULO DEL PANEL ──────────────────────────────────
+        # Encabezado visible una vez que hay resultado disponible.
         st.markdown("### 📋 Informe clínico IA")
 
-        resultado_texto = st.session_state.resultado
-        datos = st.session_state.datos_paciente
-
+        # ── SECCIÓN 1: TRES MÉTRICAS SUPERIORES ──────────────
+        # Divide la fila en 3 columnas iguales para mostrar
+        # modelo usado, complejidad estimada y tipo de análisis.
         m1, m2, m3 = st.columns(3)
+
+        # Casilla 1 — Modelo usado (estática)
         with m1:
             st.metric("Modelo usado", "Gemini 2.5 Flash")
+
+        # Casilla 2 — Complejidad estimada (dinámica)
+        # Busca palabras clave en el texto devuelto por la IA
+        # y colorea el valor según el nivel detectado.
         with m2:
-            texto_up = resultado_texto.upper()
-            if "MUY ALTA" in texto_up or "MUY ALTO" in texto_up:
-                st.markdown('<div class="metric-card"><div class="metric-value" style="color:#A32D2D">Alta</div><div class="metric-label">Complejidad estimada</div></div>', unsafe_allow_html=True)
-            elif "MEDIA" in texto_up:
-                st.markdown('<div class="metric-card"><div class="metric-value" style="color:#854F0B">Media</div><div class="metric-label">Complejidad estimada</div></div>', unsafe_allow_html=True)
+            if "MUY ALTA" in resultado_texto.upper() or "MUY ALTO" in resultado_texto.upper():
+                st.markdown("""
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#A32D2D">Alta</div>
+                    <div class="metric-label">Complejidad estimada</div>
+                </div>
+                """, unsafe_allow_html=True)
+            elif "MEDIA" in resultado_texto.upper():
+                st.markdown("""
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#854F0B">Media</div>
+                    <div class="metric-label">Complejidad estimada</div>
+                </div>
+                """, unsafe_allow_html=True)
             else:
-                st.markdown('<div class="metric-card"><div class="metric-value" style="color:#3B6D11">Baja</div><div class="metric-label">Complejidad estimada</div></div>', unsafe_allow_html=True)
+                st.markdown("""
+                <div class="metric-card">
+                    <div class="metric-value" style="color:#3B6D11">Baja</div>
+                    <div class="metric-label">Complejidad estimada</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        # Casilla 3 — Tipo de análisis (estática)
         with m3:
             st.metric("Tipo análisis", "Imagen + Prompt")
 
+        # ── SEPARADOR VISUAL ──────────────────────────────────
         st.divider()
 
+        # ── SECCIÓN 2: INFORME COMPLETO CON SCROLL ────────────
+        # Contenedor con altura fija de 500px y scroll interno.
+        # Renderiza el Markdown completo que devuelve Gemini,
+        # incluyendo las 8 secciones del prompt médico con
+        # sus tablas, listas y texto estructurado.
         with st.container(height=500):
             st.markdown(resultado_texto)
 
+        # ── SEPARADOR VISUAL ──────────────────────────────────
         st.divider()
 
+        # ── SECCIÓN 3: BOTONES DE ACCIÓN ─────────────────────
+        # Tres botones en fila para las acciones principales
+        # una vez obtenido el resultado.
         b1, b2, b3 = st.columns(3)
+
+        # Botón 1 — Exportar informe como archivo .txt
+        # Usa st.download_button para generar la descarga
+        # directamente en el navegador sin servidor adicional.
+        # El nombre del archivo incluye el ID del paciente y la fecha.
         with b1:
-            # Exportar como TXT
             st.download_button(
-                label="⬇️ Exportar TXT",
+                label="⬇️ Exportar informe",
                 data=resultado_texto,
-                file_name=f"fisulab_{datos.get('id','caso')}_{time.strftime('%Y%m%d')}.txt",
+                file_name=f"fisulab_{paciente_id or 'caso'}_{time.strftime('%Y%m%d')}.txt",
                 mime="text/plain",
                 use_container_width=True
             )
+
+        # Botón 2 — Limpiar resultado y volver al estado vacío.
+        # st.rerun() reinicia la app manteniendo session_state,
+        # por eso primero se pone resultado en None y luego se relanza.
         with b2:
-            # Exportar como PDF
-            pdf_bytes = generar_pdf(
-                datos.get("id", "No especificado"),
-                datos.get("edad", "No especificada"),
-                datos.get("sexo", "No especificado"),
-                resultado_texto
-            )
-            st.download_button(
-                label="📄 Exportar PDF",
-                data=pdf_bytes,
-                file_name=f"fisulab_{datos.get('id','caso')}_{time.strftime('%Y%m%d')}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-        with b3:
             if st.button("🔄 Nuevo análisis", use_container_width=True):
                 st.session_state.resultado = None
                 st.rerun()
 
+        # Botón 3 — Integración futura con base de datos.
+        # Deshabilitado (disabled=True) hasta que se conecte
+        # con el sistema de gestión de FISULAB.
+        with b3:
+            st.button(
+                "💾 Guardar en sistema",
+                use_container_width=True,
+                disabled=True,
+                help="Función de integración con base de datos — próximamente"
+            )
+
+        # ── SECCIÓN 4: DISCLAIMER ÉTICO ──────────────────────
+        # Aviso permanente y visible en color amarillo/ámbar.
+        # Obligatorio en toda interfaz de IA clínica.
+        # Recuerda al médico que el resultado es orientativo,
+        # no un diagnóstico definitivo.
         st.markdown("""
         <div class="disclaimer">
             <strong>⚠️ Aviso importante:</strong> Este análisis es una orientación de apoyo
             basada exclusivamente en imagen fotográfica. No constituye diagnóstico médico definitivo.
             La clasificación y el plan de tratamiento deben ser validados por el equipo clínico
-            multidisciplinar de FISULAB mediante evaluación presencial completa.
+            multidisciplinar de FISULAB mediante evaluación presencial completa. El modelo puede
+            presentar limitaciones según la calidad, ángulo e iluminación de la imagen.
         </div>
         """, unsafe_allow_html=True)
 
