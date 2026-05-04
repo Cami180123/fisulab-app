@@ -211,21 +211,6 @@ IMPORTANTE: Este análisis es una guía de apoyo para el médico tratante. No co
 diagnóstico médico definitivo. Es fundamental una evaluación clínica completa y multidisciplinar.
 """
 
-# ── Crear datos clínicos
-
-datos_pdf = {
-    "clasificacion": "Labio leporino unilateral",
-    "clasificacion_sistema": "Veau / Kernahan",
-    "complejidad": complejidad,
-    "confianza": confianza_modelo,
-    "timeline": [
-        ("3–6 meses", "Queiloplastia", "Corrección del labio"),
-        ("12–18 meses", "Palatoplastia", "Función del habla"),
-        ("7–9 años", "Injerto óseo alveolar", "Soporte dentario"),
-        ("14–18 años", "Rinoplastia secundaria", "Estética y función"),
-    ]
-}
-
 # ── FUNCIÓN: generar PDF ─────────────────────────────────────────────────────
 def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     pdf = FPDF()
@@ -515,6 +500,21 @@ Datos del paciente:
                     "fecha": time.strftime("%d %b %Y"),
                     "complejidad": comp
                 })
+
+    
+# ── Datos clínicos coherentes (pantalla y PDF)
+datos_pdf = {
+    "clasificacion": "Labio leporino unilateral",
+    "clasificacion_sistema": "Veau / Kernahan",
+    "complejidad": complejidad,
+    "confianza": confianza_modelo,
+    "timeline": [
+        ("3–6 meses", "Queiloplastia", "Corrección del labio"),
+        ("12–18 meses", "Palatoplastia", "Función del habla"),
+        ("7–9 años", "Injerto óseo alveolar", "Soporte dentario"),
+        ("14–18 años", "Rinoplastia secundaria", "Estética y función"),
+    ]
+}
 
     except Exception as e:
         with col_centro:
