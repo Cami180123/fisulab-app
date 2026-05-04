@@ -28,18 +28,36 @@ st.markdown("""
 <style>
 html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
 
-/* ── TOPBAR ── */
+/* ── AJUSTE DEFINITIVO DE ESPACIO SUPERIOR ── */
 .topbar {
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 12px;
-    padding: 14px 24px;
+    padding: 10px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin: 0;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
+
+section[data-testid="stAppViewContainer"] {
+    padding-top: 0 !important;
+}
+
+section[data-testid="stAppViewContainer"] > div {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+div.block-container {
+    padding-top: 0.5rem !important;
+}
+
+div.block-container > div:first-child {
+    margin-top: 0 !important;
+}
+
 .topbar-title {
     color: #085041;
     font-size: 20px;
