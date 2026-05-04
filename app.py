@@ -301,21 +301,6 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     )
     pdf.ln(card_h + 6)
 
-    # ── Cronograma en PDF ─────────────────────────────────────
-
-    pdf.set_font("Arial", "B", 11)
-    pdf.set_text_color(8, 80, 65)
-    pdf.cell(0, 7, "Cronograma orientativo de tratamiento", ln=True)
-    pdf.ln(2)
-    
-    pdf.set_font("Arial", size=9)
-    pdf.set_text_color(40, 40, 40)
-    
-    for edad, proc, obj in datos_pdf["timeline"]:
-        pdf.cell(30, 6, edad)
-        pdf.cell(55, 6, proc)
-        pdf.multi_cell(0, 6, obj)
-
     # ── LÍNEA SEPARADORA GRIS ─────────────────────────────────────
     pdf.set_draw_color(200, 200, 200)
     pdf.set_line_width(0.4)
@@ -412,7 +397,7 @@ with col_izq:
     tipo_imagen   = st.selectbox("Tipo de imagen",["Fotografía frontal", "Fotografía lateral", "Intraoral", "Radiografía panorámica"])
 
     st.divider()
-
+    
     st.markdown("#### 📷 Imagen clínica")
     imagen_file = st.file_uploader(
         "Cargar imagen",
@@ -423,7 +408,6 @@ with col_izq:
     if imagen_file:
         imagen_pil = Image.open(imagen_file)
         st.image(imagen_pil, caption="Vista previa", use_container_width=True)
-
   
     analizar = st.button(
         "🔬 Analizar con IA",
@@ -539,7 +523,7 @@ with col_centro:
             complejidad = "BAJA"
             color_comp = "#3B6D11"
 
-        confianza_modelo = 85
+        confianza_modelo = 85 
 
         # ── Datos clínicos coherentes (pantalla y PDF)
         datos_pdf = {
@@ -590,18 +574,52 @@ with col_centro:
                     {confianza_modelo} %
                 </div>
                 <div class="metric-label">
-                    Resultado orientativo · Requiere validación
+                    Resultado orientativo · Validación clínica requerida
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
         st.divider()
 
-        st.markdown("### 📄 Informe clínico completo")
-        with st.container(height=350):
-            st.markdown(resultado_texto)
+        # ── Clasificación diferencial
+        
+        st.markdown("### 🔬 Clasificación diferencial")
+        
+        def barra(nombre, pct):
+            st.markdown(f"**{nombre}**")
+            st.progress(pct / 100)
+        
+        barra("LL unilateral completo", 87)
+        barra("LL + paladar hendido", 9)
+        barra("LL unilateral incompleto", 4)
+        
+        st.divider()
 
-        pdf_bytes = generar_pdf(
+        st.markdown("### 🗓️ Cronograma orientativo")
+
+        timeline = [
+            ("3–6 meses", "Queiloplastia", "Cierre del labio"),
+            ("12–18 meses", "Palatoplastia", "Función del habla"),
+            ("7–9 años", "Injerto óseo alveolar", "Soporte dentario"),
+            ("14–18 años", "Rinoplastia secundaria", "Estética y función nasal"),
+        ]
+        
+        for edad, proc, obj in timeline:
+            st.markdown(f"""
+            <div style="border-left:3px solid #0F6E56; padding-left:12px; margin-bottom:10px">
+                <strong>{edad}</strong><br>
+                {proc}<br>
+                <span style="color:#6c757d;font-size:12px">{obj}</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.divider()
+        
+        st.markdown("### 📄 Informe completo")
+        with st.container(height=400):
+            st.markdown(resultado_texto)
+                
+       pdf_bytes = generar_pdf(
             paciente_id or "Caso IA",
             paciente_edad or "No especificada",
             paciente_sexo,
