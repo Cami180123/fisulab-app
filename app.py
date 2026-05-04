@@ -73,6 +73,11 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     border-radius: 10px;
     padding: 16px 20px;
     text-align: center;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
 }
 .metric-value { font-size: 26px; font-weight: 700; color: #085041; }
 .metric-label { font-size: 12px; color: #6c757d; margin-top: 4px; }
@@ -122,10 +127,7 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
 footer     {visibility: hidden;}
 header     {visibility: hidden;}
 
-# ============================================
-# FULLSCREEN LAYOUT WITHOUT GLOBAL SCROLL
-# ===========================================
-
+/* ── FULLSCREEN LAYOUT WITHOUT GLOBAL SCROLL ── */
 html, body {
     height: 100%;
     overflow: hidden;
@@ -145,9 +147,6 @@ div[data-testid="column"]:nth-of-type(3) {
     height: calc(100vh - 110px);
     overflow-y: auto;
 }
-
-
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -212,6 +211,21 @@ IMPORTANTE: Este análisis es una guía de apoyo para el médico tratante. No co
 diagnóstico médico definitivo. Es fundamental una evaluación clínica completa y multidisciplinar.
 """
 
+# ── Crear datos clínicos
+
+datos_pdf = {
+    "clasificacion": "Labio leporino unilateral",
+    "clasificacion_sistema": "Veau / Kernahan",
+    "complejidad": complejidad,
+    "confianza": confianza_modelo,
+    "timeline": [
+        ("3–6 meses", "Queiloplastia", "Corrección del labio"),
+        ("12–18 meses", "Palatoplastia", "Función del habla"),
+        ("7–9 años", "Injerto óseo alveolar", "Soporte dentario"),
+        ("14–18 años", "Rinoplastia secundaria", "Estética y función"),
+    ]
+}
+
 # ── FUNCIÓN: generar PDF ─────────────────────────────────────────────────────
 def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     pdf = FPDF()
@@ -261,6 +275,61 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     pdf.cell(0, 7, f"Paciente: {paciente_id}   |   Edad: {paciente_edad}   |   Sexo: {paciente_sexo}", ln=True)
     pdf.cell(0, 7, f"Fecha de generacion: {time.strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(3)
+
+    # ── RESUMEN CLÍNICO IA (TARJETAS) ─────────────────────
+    pdf.set_font("Arial", "B", 12)
+    pdf.set_text_color(8, 80, 65)
+    pdf.cell(0, 8, "Resumen clínico IA", ln=True)
+    pdf.ln(2)
+    
+    card_y = pdf.get_y()
+    card_h = 26
+    card_w = 58
+    gap = 4
+    
+    def draw_card(x, title, value, subtitle="", color=(8, 80, 65)):
+        pdf.set_xy(x, card_y)
+        pdf.set_draw_color(220, 220, 220)
+        pdf.rect(x, card_y, card_w, card_h)
+        pdf.set_xy(x + 2, card_y + 3)
+        pdf.set_font("Arial", size=8)
+        pdf.set_text_color(100, 100, 100)
+        pdf.cell(card_w - 4, 4, title, ln=True)
+        pdf.set_font("Arial", "B", 11)
+        pdf.set_text_color(*color)
+        pdf.cell(card_w - 4, 8, value, ln=True)
+        if subtitle:
+            pdf.set_font("Arial", size=7)
+            pdf.set_text_color(120, 120, 120)
+            pdf.cell(card_w - 4, 4, subtitle, ln=True)
+    
+    x0 = 15
+    
+    draw_card(x0, "Clasificación", "Labio leporino unilateral", "Veau / Kernahan")
+    draw_card(x0 + card_w + gap, "Complejidad", complejidad)
+    draw_card(
+        x0 + 2 * (card_w + gap),
+        "Confianza IA",
+        f"{confianza_modelo} %",
+        "Resultado orientativo",
+        color=(29, 122, 243)
+    )
+    pdf.ln(card_h + 6)
+
+    # ── Cronograma en PDF ─────────────────────────────────────
+
+    pdf.set_font("Arial", "B", 11)
+    pdf.set_text_color(8, 80, 65)
+    pdf.cell(0, 7, "Cronograma orientativo de tratamiento", ln=True)
+    pdf.ln(2)
+    
+    pdf.set_font("Arial", size=9)
+    pdf.set_text_color(40, 40, 40)
+    
+    for edad, proc, obj in datos_pdf["timeline"]:
+        pdf.cell(30, 6, edad)
+        pdf.cell(55, 6, proc)
+        pdf.multi_cell(0, 6, obj)
 
     # ── LÍNEA SEPARADORA GRIS ─────────────────────────────────────
     pdf.set_draw_color(200, 200, 200)
@@ -355,9 +424,7 @@ with col_izq:
     paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
     paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
     paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
-    # tipo_imagen   = st.selectbox(
-    #    "Tipo de imagen",
-    #    ["Fotografía frontal", "Fotografía lateral", "Intraoral", "Radiografía panorámica"])
+     ── */ tipo_imagen   = st.selectbox("Tipo de imagen",["Fotografía frontal", "Fotografía lateral", "Intraoral", "Radiografía panorámica"]) ── */
 
     st.divider()
 
@@ -412,7 +479,7 @@ Datos del paciente:
 - ID / Nombre: {paciente_id if paciente_id else 'No proporcionado'}
 - Edad: {paciente_edad if paciente_edad else 'No proporcionada'}
 - Sexo: {paciente_sexo}
-- Tipo de imagen: {tipo_imagen}
+── */ - Tipo de imagen: {tipo_imagen} ── */
 """
         prompt_completo = contexto_paciente + "\n\n" + PROMPT_MEDICO
 
@@ -489,16 +556,18 @@ with col_centro:
 
         confianza_modelo = 85
 
-        st.markdown("### 📌 Resumen clínico IA")
+st.markdown("### 📌 Resumen clínico IA")
 
- c1, c2, c3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
 # ── TARJETA 1: Clasificación ─────────────────────
 with c1:
     st.markdown("""
     <div class="metric-card">
         <div class="metric-label">Clasificación probable</div>
-        <div class="metric-value">Labio<br>leporino<br>unilateral</div>
+        <div class="metric-value">
+            Labio<br>leporino<br>unilateral
+        </div>
         <div class="metric-label">Veau / Kernahan</div>
     </div>
     """, unsafe_allow_html=True)
@@ -521,14 +590,13 @@ with c3:
     <div class="metric-card">
         <div class="metric-label">Confianza del modelo</div>
 
-        <!-- Barra de progreso -->
         <div style="
             width:100%;
             height:8px;
             background:#e9ecef;
             border-radius:6px;
             overflow:hidden;
-            margin:6px 0;
+            margin:8px 0;
         ">
             <div style="
                 width:{confianza_modelo}%;
@@ -537,22 +605,21 @@ with c3:
             "></div>
         </div>
 
-        <!-- Porcentaje visible -->
         <div style="
-            font-size:14px;
-            font-weight:600;
+            font-size:15px;
+            font-weight:700;
             color:#1d7af3;
         ">
-            {confianza_modelo}%
+            {confianza_modelo} %
         </div>
 
         <div class="metric-label">
-            Resultado orientativo · Requiere validación
+            Resultado orientativo · Requiere validación clínica
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-        st.divider()
+                st.divider()
 
         st.markdown("### 🔬 Clasificación diferencial")
         st.progress(0.87, text="LL unilateral completo")
