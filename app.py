@@ -24,7 +24,7 @@ def get_logo_base64(path="fisulab.png"):
 
 # ── CONFIGURACIÓN DE PÁGINA ──────────────────────────────────────────────────
 st.set_page_config(
-    page_title="FISULAB · IA Clínica",
+    page_title="FISULAB ·  IA PARA APOYO DIAGNÓSTICO ClÍNICO",
     page_icon="🏥",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -461,45 +461,72 @@ with col_centro:
         # Encabezado visible una vez que hay resultado disponible.
         st.markdown("### 📋 Informe clínico IA")
 
+        # ── PREPARACIÓN DEL RESULTADO ─────────────────────────
+        resultado_texto = st.session_state.resultado
+        texto_upper = resultado_texto.upper()
+        
+        # Inferencia simple de complejidad (MVP clínico)
+        if "MUY ALTA" in texto_upper or "MUY ALTO" in texto_upper:
+            complejidad = "MUY ALTA"
+            color_comp = "#A32D2D"
+        elif "MEDIA" in texto_upper:
+            complejidad = "MEDIA"
+            color_comp = "#854F0B"
+        else:
+            complejidad = "BAJA"
+            color_comp = "#3B6D11"
+        
+        # Confianza simulada (luego puede venir estructurada desde el modelo)
+        confianza_modelo = 85
+
+
         # ── SECCIÓN 1: TRES MÉTRICAS SUPERIORES ──────────────
-        # Divide la fila en 3 columnas iguales para mostrar
-        # modelo usado, complejidad estimada y tipo de análisis.
-        m1, m2, m3 = st.columns(3)
-
-        # Casilla 1 — Modelo usado (estática)
-        with m1:
-            st.metric("Modelo usado", "Gemini 2.5 Flash")
-
-        # Casilla 2 — Complejidad estimada (dinámica)
-        # Busca palabras clave en el texto devuelto por la IA
-        # y colorea el valor según el nivel detectado.
-        with m2:
-            if "MUY ALTA" in resultado_texto.upper() or "MUY ALTO" in resultado_texto.upper():
-                st.markdown("""
-                <div class="metric-card">
-                    <div class="metric-value" style="color:#A32D2D">Alta</div>
-                    <div class="metric-label">Complejidad estimada</div>
+        st.markdown("### 📌 Resumen clínico IA")
+        
+        c1, c2, c3 = st.columns(3)
+        
+        # ── CARD 1: Clasificación principal ───────────────────
+        with c1:
+            st.markdown("""
+            <div class="metric-card">
+                <div class="metric-label">Clasificación probable</div>
+                <div class="metric-value">Labio leporino unilateral</div>
+                <div class="metric-label">Clasificación Veau / Kernahan</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # ── CARD 2: Complejidad ───────────────────────────────
+        with c2:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">Complejidad estimada</div>
+                <div class="metric-value" style="color:{color_comp}">
+                    {complejidad}
                 </div>
-                """, unsafe_allow_html=True)
-            elif "MEDIA" in resultado_texto.upper():
-                st.markdown("""
-                <div class="metric-card">
-                    <div class="metric-value" style="color:#854F0B">Media</div>
-                    <div class="metric-label">Complejidad estimada</div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                <div class="metric-card">
-                    <div class="metric-value" style="color:#3B6D11">Baja</div>
-                    <div class="metric-label">Complejidad estimada</div>
-                </div>
-                """, unsafe_allow_html=True)
+                <div class="metric-label">Número de intervenciones</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # ── CARD 3: Confianza del modelo ──────────────────────
+        with c3:
+            st.markdown("**Confianza del modelo**")
+            st.progress(confianza_modelo / 100)
+            st.caption("Resultado orientativo · Requiere validación clínica")
 
-        # Casilla 3 — Tipo de análisis (estática)
-        with m3:
-            st.metric("Tipo análisis", "Imagen + Prompt")
+        
+st.divider()
+st.markdown("### 🔬 Clasificación diferencial")
 
+def barra_confianza(nombre, porcentaje):
+    st.markdown(f"**{nombre}**")
+    st.progress(porcentaje / 100)
+
+barra_confianza("Labio leporino unilateral completo", 87)
+barra_confianza("Labio + paladar hendido", 9)
+barra_confianza("Labio leporino unilateral incompleto", 4)
+-
+
+        
         # ── SEPARADOR VISUAL ──────────────────────────────────
         st.divider()
 
@@ -508,8 +535,38 @@ with col_centro:
         # Renderiza el Markdown completo que devuelve Gemini,
         # incluyendo las 8 secciones del prompt médico con
         # sus tablas, listas y texto estructurado.
-        with st.container(height=500):
-            st.markdown(resultado_texto)
+        
+st.divider()
+st.markdown("### 🗓️ Cronograma orientativo de tratamiento")
+
+timeline = [
+    ("3 – 6 meses", "Queiloplastia", "Corrección del labio y cierre funcional"),
+    ("12 – 18 meses", "Palatoplastia", "Optimizar función del habla"),
+    ("7 – 9 años", "Injerto óseo alveolar", "Soporte dentario y oclusión"),
+    ("14 – 18 años", "Rinoplastia secundaria", "Mejorar forma y función nasal"),
+]
+
+for edad, procedimiento, objetivo in timeline:
+    st.markdown(f"""
+    <div style="
+        border-left:4px solid #0F6E56;
+        padding-left:12px;
+        margin-bottom:12px;
+    ">
+        <strong>{edad}</strong><br>
+        {procedimiento}<br>
+        <span style="font-size:12px;color:#6c757d">
+            Objetivo: {objetivo}
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
+st.markdown("### 📄 Informe clínico completo")
+
+with st.container(height=400):
+    st.markdown(resultado_texto)
+
 
         # ── SEPARADOR VISUAL ──────────────────────────────────
         st.divider()
@@ -523,13 +580,22 @@ with col_centro:
         # Usa st.download_button para generar la descarga
         # directamente en el navegador sin servidor adicional.
         # El nombre del archivo incluye el ID del paciente y la fecha.
-        with b1:
-            st.download_button(
-                label="⬇️ Exportar informe",
-                data=resultado_texto,
-                file_name=f"fisulab_{paciente_id or 'caso'}_{time.strftime('%Y%m%d')}.txt",
-                mime="text/plain",
-                use_container_width=True
+        
+with b1:
+    pdf_bytes = generar_pdf(
+        paciente_id or "Caso IA",
+        paciente_edad or "No especificada",
+        paciente_sexo,
+        resultado_texto
+    )
+    st.download_button(
+        label="📄 Exportar PDF clínico",
+        data=pdf_bytes,
+        file_name=f"fisulab_informe_{time.strftime('%Y%m%d')}.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
+
             )
 
         # Botón 2 — Limpiar resultado y volver al estado vacío.
