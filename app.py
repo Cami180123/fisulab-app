@@ -524,8 +524,6 @@ def barra_confianza(nombre, porcentaje):
 barra_confianza("Labio leporino unilateral completo", 87)
 barra_confianza("Labio + paladar hendido", 9)
 barra_confianza("Labio leporino unilateral incompleto", 4)
--
-
         
         # ── SEPARADOR VISUAL ──────────────────────────────────
         st.divider()
