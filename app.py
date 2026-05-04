@@ -13,13 +13,6 @@ import os
 import time
 import base64
 
-# ── FUNCIÓN LOGO ── 
-def get_logo_base64(path="fisulab.png"):
-    if os.path.exists(path):
-        with open(path, "rb") as f:
-            return base64.b64encode(f.read()).decode()
-    return None
-
 # ── CONFIGURACIÓN DE PÁGINA ──────────────────────────────────────────────────
 st.set_page_config(
     page_title="FISULAB ·  IA PARA APOYO DIAGNÓSTICO ClÍNICO",
@@ -222,12 +215,12 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     # Esto evita errores si el archivo no está en la carpeta.
     logo_path = "fisulab.png"
     if os.path.exists(logo_path):
+        pdf.image(logo_path, x=15, y=10, w=28, h=0)
         # Inserta el logo en la esquina superior izquierda.
         # x=15, y=10 → posición desde el borde (en mm)
         # w=28      → ancho del logo en mm (ajusta si lo quieres más grande/pequeño)
         # h=0       → alto en 0 para que FPDF calcule la proporción automáticamente
-        pdf.image(logo_path, x=15, y=10, w=28, h=0)
-
+     
     # ── NOMBRE DE LA INSTITUCIÓN (al lado del logo) ───────────────
     # Mueve el cursor a la derecha del logo para escribir el nombre
     pdf.set_xy(48, 14)
@@ -251,7 +244,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     # ── TÍTULO DEL INFORME ────────────────────────────────────────
     pdf.set_font("Arial", "B", 14)
     pdf.set_text_color(8, 80, 65)      # verde oscuro #085041
-    pdf.cell(0, 9, "Informe de Apoyo Diagnostico - IA Clinica", ln=True, align="C")
+    pdf.cell(0, 9, "Informe para apoyo diagnóstico clínico - generado con IA", ln=True, align="C")
     pdf.ln(2)
 
     # ── DATOS DEL PACIENTE ────────────────────────────────────────
@@ -290,7 +283,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     
     x0 = 15
     
-    draw_card(x0, "Clasificación", "Labio leporino unilateral", "Veau / Kernahan")
+    draw_card(x0, "Clasificación", clasificacion, "Veau/Kernahan")
     draw_card(x0 + card_w + gap, "Complejidad", complejidad)
     draw_card(
         x0 + 2 * (card_w + gap),
@@ -339,6 +332,17 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
 
     return bytes(pdf.output())
 
+# ── FUNCIÓN LOGO ───────────────────────────────────────────────────────── 
+# Lee el logo y conviértelo a base64 para incrustarlo directo en el HTML.
+# Base64 es necesario porque Streamlit no sirve archivos locales directamente en HTML.
+
+def get_logo_base64(path="fisulab.png"):
+    """Convierte el logo a texto base64 para usarlo en HTML inline."""
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return None
+
 # ── ESTADO DE SESIÓN ─────────────────────────────────────────────────────────
 if "historial" not in st.session_state:
     st.session_state.historial = []
@@ -351,17 +355,6 @@ if "datos_paciente" not in st.session_state:
 API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # ── TOPBAR ───────────────────────────────────────────────────────────────────
-# Lee el logo y conviértelo a base64 para incrustarlo directo en el HTML.
-# Base64 es necesario porque Streamlit no sirve archivos locales directamente en HTML.
-import base64
-
-def get_logo_base64(path="fisulab.png"):
-    """Convierte el logo a texto base64 para usarlo en HTML inline."""
-    if os.path.exists(path):
-        with open(path, "rb") as f:
-            return base64.b64encode(f.read()).decode()
-    return None
-
 logo_b64 = get_logo_base64()
 
 # Construye el HTML del logo: si existe muestra la imagen, si no un ícono de texto.
@@ -379,7 +372,7 @@ st.markdown(f"""
             <div class="topbar-sub">Apoyo diagnóstico — labio y paladar hendido</div>
         </div>
     </div>
-    <div class="topbar-badge">⚠️ No reemplaza diagnóstico médico</div>
+    <div class="topbar-badge">⚠️ No reemplaza un diagnóstico médico profesional</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -623,7 +616,7 @@ with col_centro:
             paciente_id or "Caso IA",
             paciente_edad or "No especificada",
             paciente_sexo,
-            resultado_texto
+            resultado_texto,
         )
 
         st.download_button(
