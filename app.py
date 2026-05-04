@@ -12,6 +12,8 @@ import io
 import os
 import time
 import base64
+import re
+import json
 
 # ── CONFIGURACIÓN DE PÁGINA ──────────────────────────────────────────────────
 st.set_page_config(
@@ -26,35 +28,17 @@ st.markdown("""
 <style>
 html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
 
-/* ── AJUSTE DEFINITIVO DE ESPACIO SUPERIOR ── */
-
+/* ── TOPBAR ── */
 .topbar {
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 12px;
-    padding: 10px 24px;
+    padding: 14px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0;
+    margin-bottom: 20px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-
-section[data-testid="stAppViewContainer"] {
-    padding-top: 0 !important;
-}
-
-section[data-testid="stAppViewContainer"] > div {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-
-div.block-container {
-    padding-top: 0.5rem !important;
-}
-
-div.block-container > div:first-child {
-    margin-top: 0 !important;
 }
 .topbar-title {
     color: #085041;
@@ -88,7 +72,6 @@ div.block-container > div:first-child {
     display: flex;
     flex-direction: column;
     gap: 6px;
-
 }
 .metric-value { font-size: 26px; font-weight: 700; color: #085041; }
 .metric-label { font-size: 12px; color: #6c757d; margin-top: 4px; }
@@ -223,8 +206,8 @@ diagnóstico médico definitivo. Es fundamental una evaluación clínica complet
 
 ---
 ## BLOQUE ESTRUCTURADO (OBLIGATORIO)
-Al FINAL de tu respuesta, incluye SIEMPRE este bloque JSON exacto, sin modificar las claves,
-con los valores que correspondan a tu análisis. No omitas este bloque bajo ninguna circunstancia.
+Al FINAL de tu respuesta incluye SIEMPRE este bloque JSON exacto con los valores reales del caso.
+No omitas este bloque bajo ninguna circunstancia.
 
 ```json
 {
@@ -236,10 +219,15 @@ con los valores que correspondan a tu análisis. No omitas este bloque bajo ning
     {"nombre": "<diagnóstico 1>", "probabilidad": <número entero 0-100>},
     {"nombre": "<diagnóstico 2>", "probabilidad": <número entero 0-100>},
     {"nombre": "<diagnóstico 3>", "probabilidad": <número entero 0-100>}
+  ],
+  "cronograma": [
+    {"edad": "<rango de edad>", "procedimiento": "<nombre>", "objetivo": "<descripción breve>"},
+    {"edad": "<rango de edad>", "procedimiento": "<nombre>", "objetivo": "<descripción breve>"}
   ]
 }
 ```
 """
+
 
 # ── FUNCIÓN: parsear JSON estructurado de la respuesta de Gemini ─────────────
 def parsear_json_ia(texto):
@@ -252,74 +240,81 @@ def parsear_json_ia(texto):
         "sistema": "—",
         "complejidad": "BAJA",
         "confianza_principal": 0,
-        "diferenciales": []
+        "diferenciales": [],
+        "cronograma": [],
     }
     try:
-        import re, json
-        # Busca el bloque ```json ... ``` al final del texto
         match = re.search(r"```json\s*(\{.*?\})\s*```", texto, re.DOTALL)
         if not match:
             return FALLBACK
         datos = json.loads(match.group(1))
-        # Normalizar y validar cada campo
+
         datos["clasificacion_principal"] = str(datos.get("clasificacion_principal", "No determinada"))
         datos["sistema"]                 = str(datos.get("sistema", "—"))
         datos["complejidad"]             = str(datos.get("complejidad", "BAJA")).upper()
         datos["confianza_principal"]     = max(0, min(100, int(datos.get("confianza_principal", 0))))
-        # Normalizar diferenciales: clampear probabilidades entre 0 y 100
-        diferenciales = datos.get("diferenciales", [])
+
+        # Normalizar diferenciales — probabilidades clampadas entre 0 y 100
         datos["diferenciales"] = [
             {
                 "nombre": str(d.get("nombre", "—")),
                 "probabilidad": max(0, min(100, int(d.get("probabilidad", 0))))
             }
-            for d in diferenciales if isinstance(d, dict)
+            for d in datos.get("diferenciales", []) if isinstance(d, dict)
         ]
+
+        # Normalizar cronograma
+        datos["cronograma"] = [
+            {
+                "edad":          str(c.get("edad", "—")),
+                "procedimiento": str(c.get("procedimiento", "—")),
+                "objetivo":      str(c.get("objetivo", "—")),
+            }
+            for c in datos.get("cronograma", []) if isinstance(c, dict)
+        ]
+
         return datos
     except Exception:
         return FALLBACK
 
+
 # ── FUNCIÓN: generar PDF ─────────────────────────────────────────────────────
 def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
-                clasificacion="No determinada", complejidad="N/D", confianza_modelo=0):
+                clasificacion="No determinada", complejidad="N/D",
+                confianza_modelo=0, cronograma=None):
+    if cronograma is None:
+        cronograma = []
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_margins(15, 15, 15)
 
     # ── ENCABEZADO CON LOGO ──────────────────────────────────────
-    # Verifica si el archivo del logo existe antes de intentar cargarlo.
-    # Esto evita errores si el archivo no está en la carpeta.
     logo_path = "fisulab.png"
     if os.path.exists(logo_path):
         pdf.image(logo_path, x=15, y=10, w=28, h=0)
-        # Inserta el logo en la esquina superior izquierda.
-        # x=15, y=10 → posición desde el borde (en mm)
-        # w=28      → ancho del logo en mm (ajusta si lo quieres más grande/pequeño)
-        # h=0       → alto en 0 para que FPDF calcule la proporción automáticamente
-     
-    # ── NOMBRE DE LA INSTITUCIÓN (al lado del logo) ───────────────
-    # Mueve el cursor a la derecha del logo para escribir el nombre
+
+    # ── NOMBRE DE LA INSTITUCIÓN ──────────────────────────────────
     pdf.set_xy(48, 14)
     pdf.set_font("Arial", "B", 15)
-    pdf.set_text_color(74, 140, 40)   # verde institucional de Fisulab (#4A8C28)
+    pdf.set_text_color(74, 140, 40)
     pdf.cell(0, 7, "FISULAB", ln=True)
 
     pdf.set_xy(48, 22)
     pdf.set_font("Arial", size=9)
-    pdf.set_text_color(100, 100, 100)  # gris para el subtítulo
+    pdf.set_text_color(100, 100, 100)
     pdf.cell(0, 5, "Fundación de Atención Integral para Labio y Paladar Hendido", ln=True)
 
     # ── LÍNEA SEPARADORA VERDE ────────────────────────────────────
-    # Baja el cursor debajo del logo (mínimo y=42 para no tapar el logo de 28mm)
     pdf.set_y(42)
-    pdf.set_draw_color(74, 140, 40)    # color verde para la línea
+    pdf.set_draw_color(74, 140, 40)
     pdf.set_line_width(0.8)
-    pdf.line(15, 42, 195, 42)          # línea horizontal de margen a margen
-    pdf.ln(6)                          # espacio después de la línea
+    pdf.line(15, 42, 195, 42)
+    pdf.ln(6)
 
     # ── TÍTULO DEL INFORME ────────────────────────────────────────
     pdf.set_font("Arial", "B", 14)
-    pdf.set_text_color(8, 80, 65)      # verde oscuro #085041
+    pdf.set_text_color(8, 80, 65)
     pdf.cell(0, 9, "Informe para apoyo diagnóstico clínico - generado con IA", ln=True, align="C")
     pdf.ln(2)
 
@@ -330,17 +325,17 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.cell(0, 7, f"Fecha de generacion: {time.strftime('%d/%m/%Y %H:%M')}", ln=True)
     pdf.ln(3)
 
-    # ── RESUMEN CLÍNICO IA (TARJETAS) ─────────────────────
+    # ── RESUMEN CLÍNICO IA (TARJETAS) ─────────────────────────────
     pdf.set_font("Arial", "B", 12)
     pdf.set_text_color(8, 80, 65)
     pdf.cell(0, 8, "Resumen clínico IA", ln=True)
     pdf.ln(2)
-    
+
     card_y = pdf.get_y()
     card_h = 26
     card_w = 58
-    gap = 4
-    
+    gap    = 4
+
     def draw_card(x, title, value, subtitle="", color=(8, 80, 65)):
         pdf.set_xy(x, card_y)
         pdf.set_draw_color(220, 220, 220)
@@ -349,26 +344,46 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
         pdf.set_font("Arial", size=8)
         pdf.set_text_color(100, 100, 100)
         pdf.cell(card_w - 4, 4, title, ln=True)
-        pdf.set_font("Arial", "B", 11)
+        pdf.set_font("Arial", "B", 10)
         pdf.set_text_color(*color)
-        pdf.cell(card_w - 4, 8, value, ln=True)
+        valor_corto = value[:28] + "..." if len(value) > 28 else value
+        pdf.cell(card_w - 4, 8, valor_corto, ln=True)
         if subtitle:
             pdf.set_font("Arial", size=7)
             pdf.set_text_color(120, 120, 120)
             pdf.cell(card_w - 4, 4, subtitle, ln=True)
-    
+
     x0 = 15
-    
-    draw_card(x0, "Clasificación", clasificacion, "Veau/Kernahan")
-    draw_card(x0 + card_w + gap, "Complejidad", complejidad)
-    draw_card(
-        x0 + 2 * (card_w + gap),
-        "Confianza IA",
-        f"{confianza_modelo} %",
-        "Resultado orientativo",
-        color=(29, 122, 243)
-    )
+    draw_card(x0,                    "Clasificacion",  clasificacion, "Veau / Kernahan")
+    draw_card(x0 + card_w + gap,     "Complejidad",    complejidad)
+    draw_card(x0 + 2*(card_w + gap), "Confianza IA",   f"{confianza_modelo} %",
+              "Resultado orientativo", color=(29, 122, 243))
     pdf.ln(card_h + 6)
+
+    # ── CRONOGRAMA DINÁMICO ───────────────────────────────────────
+    if cronograma:
+        pdf.set_draw_color(200, 200, 200)
+        pdf.set_line_width(0.4)
+        pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+        pdf.ln(4)
+
+        pdf.set_font("Arial", "B", 12)
+        pdf.set_text_color(8, 80, 65)
+        pdf.cell(0, 8, "Cronograma orientativo", ln=True)
+        pdf.ln(2)
+
+        for paso in cronograma:
+            edad = paso["edad"].encode("latin-1", errors="replace").decode("latin-1")
+            proc = paso["procedimiento"].encode("latin-1", errors="replace").decode("latin-1")
+            obj  = paso["objetivo"].encode("latin-1", errors="replace").decode("latin-1")
+
+            pdf.set_font("Arial", "B", 10)
+            pdf.set_text_color(15, 110, 86)
+            pdf.cell(0, 6, f"{edad}  -  {proc}", ln=True)
+            pdf.set_font("Arial", size=9)
+            pdf.set_text_color(90, 90, 90)
+            pdf.cell(0, 5, f"   {obj}", ln=True)
+            pdf.ln(1)
 
     # ── LÍNEA SEPARADORA GRIS ─────────────────────────────────────
     pdf.set_draw_color(200, 200, 200)
@@ -380,44 +395,44 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(150, 100, 0)
     pdf.multi_cell(0, 5,
-        "IMPORTANTE: Este informe es una orientación de apoyo, basada en imagenés fotográficas"
-        "Este análisis es una guía para el médico tratante. No constituye un diagnóstico médico definitivo."
-        "Es fundamental una evaluación clínica completa y multidisciplinar por parte del equipo"
+        "IMPORTANTE: Este informe es una orientacion de apoyo, basada en imagenes fotograficas. "
+        "No constituye un diagnostico medico definitivo. "
+        "Es fundamental una evaluacion clinica completa y multidisciplinar por parte del equipo "
         "de FISULAB mediante evaluacion presencial completa."
-                  )
+    )
     pdf.ln(5)
 
     # ── CONTENIDO DEL DIAGNÓSTICO ─────────────────────────────────
     pdf.set_font("Arial", size=10)
     pdf.set_text_color(30, 30, 30)
-    # encode latin-1 reemplaza caracteres especiales que FPDF no soporta (tildes, ñ)
     texto_limpio = resultado_texto.encode("latin-1", errors="replace").decode("latin-1")
     pdf.multi_cell(0, 6, texto_limpio)
     pdf.ln(8)
 
     # ── PIE DE PÁGINA ─────────────────────────────────────────────
-    pdf.set_y(-20)                     # posición a 20mm del borde inferior
+    pdf.set_y(-20)
     pdf.set_draw_color(74, 140, 40)
     pdf.set_line_width(0.5)
     pdf.line(15, pdf.get_y(), 195, pdf.get_y())
     pdf.ln(3)
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 5, f"FISULAB · IA PARA APOYO DIAGNÓSTICO ClÍNICO · Generado el {time.strftime('%d/%m/%Y')} · Página {pdf.page_no()}",
+    pdf.cell(0, 5,
+             f"FISULAB · IA PARA APOYO DIAGNOSTICO CLINICO · "
+             f"Generado el {time.strftime('%d/%m/%Y')} · Pagina {pdf.page_no()}",
              align="C")
 
     return bytes(pdf.output())
 
-# ── FUNCIÓN LOGO ───────────────────────────────────────────────────────── 
-# Lee el logo y conviértelo a base64 para incrustarlo directo en el HTML.
-# Base64 es necesario porque Streamlit no sirve archivos locales directamente en HTML.
 
+# ── FUNCIÓN LOGO ──────────────────────────────────────────────────────────────
 def get_logo_base64(path="fisulab.png"):
     """Convierte el logo a texto base64 para usarlo en HTML inline."""
     if os.path.exists(path):
         with open(path, "rb") as f:
             return base64.b64encode(f.read()).decode()
     return None
+
 
 # ── ESTADO DE SESIÓN ─────────────────────────────────────────────────────────
 if "historial" not in st.session_state:
@@ -435,7 +450,6 @@ API_KEY = os.getenv("GEMINI_API_KEY", "")
 # ── TOPBAR ───────────────────────────────────────────────────────────────────
 logo_b64 = get_logo_base64()
 
-# Construye el HTML del logo: si existe muestra la imagen, si no un ícono de texto.
 if logo_b64:
     logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="height:52px; width:auto; object-fit:contain;">'
 else:
@@ -446,8 +460,8 @@ st.markdown(f"""
     <div style="display:flex; align-items:center; gap:14px;">
         {logo_html}
         <div>
-            <div class="topbar-title">FISULAB · IA PARA APOYO DE DIAGNÓSTICO ClÍNICO</div>
-            <div class="topbar-sub">Labio y paladar hendido</div>
+            <div class="topbar-title">FISULAB · IA Clínica</div>
+            <div class="topbar-sub">Apoyo diagnóstico — labio y paladar hendido</div>
         </div>
     </div>
     <div class="topbar-badge">⚠️ No reemplaza un diagnóstico médico profesional</div>
@@ -465,10 +479,11 @@ with col_izq:
     paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
     paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
     paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
-    tipo_imagen   = st.selectbox("Tipo de imagen",["Fotografía frontal", "Fotografía lateral", "Intraoral", "Radiografía panorámica"])
+    tipo_imagen   = st.selectbox("Tipo de imagen", ["Fotografía frontal", "Fotografía lateral",
+                                                     "Intraoral", "Radiografía panorámica"])
 
     st.divider()
-    
+
     st.markdown("#### 📷 Imagen clínica")
     imagen_file = st.file_uploader(
         "Cargar imagen",
@@ -479,7 +494,7 @@ with col_izq:
     if imagen_file:
         imagen_pil = Image.open(imagen_file)
         st.image(imagen_pil, caption="Vista previa", use_container_width=True)
-  
+
     analizar = st.button(
         "🔬 Analizar con IA",
         use_container_width=True,
@@ -495,9 +510,9 @@ with col_izq:
     st.divider()
 
     if st.button("🆕 Nuevo paciente", use_container_width=True):
-        st.session_state.resultado = None
+        st.session_state.resultado    = None
         st.session_state.datos_paciente = {}
-        st.session_state.datos_ia = {}
+        st.session_state.datos_ia     = {}
         st.rerun()
 
 # ════════════════════════════════════════════════════════════
@@ -525,7 +540,7 @@ Datos del paciente:
 
         mime_map = {
             "JPEG": "image/jpeg", "JPG": "image/jpeg",
-            "PNG": "image/png", "WEBP": "image/webp"
+            "PNG":  "image/png",  "WEBP": "image/webp"
         }
         mime_type = mime_map.get(fmt.upper(), "image/jpeg")
 
@@ -537,7 +552,7 @@ Datos del paciente:
                 ])
                 st.session_state.resultado = response.text
                 st.session_state.datos_paciente = {
-                    "id": paciente_id or f"Caso {len(st.session_state.historial)+1}",
+                    "id":   paciente_id or f"Caso {len(st.session_state.historial)+1}",
                     "edad": paciente_edad or "No especificada",
                     "sexo": paciente_sexo,
                 }
@@ -546,16 +561,16 @@ Datos del paciente:
                 datos_ia = parsear_json_ia(response.text)
                 st.session_state.datos_ia = datos_ia
 
-                # Detectar complejidad desde el JSON (Fix 2: ya no depende de str.upper() sobre texto libre)
+                # Complejidad desde el JSON — ya no depende de búsqueda en texto libre
                 comp_map = {"MUY ALTA": "alta", "MEDIA": "media", "BAJA": "baja"}
                 comp = comp_map.get(datos_ia["complejidad"], "baja")
 
                 st.session_state.historial.insert(0, {
-                    "nombre": paciente_id or f"Caso {len(st.session_state.historial)+1}",
-                    "fecha": time.strftime("%d %b %Y"),
+                    "nombre":      paciente_id or f"Caso {len(st.session_state.historial)+1}",
+                    "fecha":       time.strftime("%d %b %Y"),
                     "complejidad": comp
                 })
-  
+
     except Exception as e:
         with col_centro:
             st.error(f"❌ Error al conectar con la API: {str(e)}")
@@ -581,17 +596,17 @@ with col_centro:
 
     else:
         resultado_texto = st.session_state.resultado
-        datos_ia = st.session_state.datos_ia
+        datos_ia        = st.session_state.datos_ia
 
-        # ── Leer datos dinámicos del JSON parseado ──
-        clasificacion  = datos_ia.get("clasificacion_principal", "No determinada")
-        sistema        = datos_ia.get("sistema", "—")
-        complejidad    = datos_ia.get("complejidad", "BAJA")
+        # ── Datos dinámicos del JSON parseado ───────────────────────
+        clasificacion    = datos_ia.get("clasificacion_principal", "No determinada")
+        sistema          = datos_ia.get("sistema", "—")
+        complejidad      = datos_ia.get("complejidad", "BAJA")
         confianza_modelo = datos_ia.get("confianza_principal", 0)
-        diferenciales  = datos_ia.get("diferenciales", [])
+        diferenciales    = datos_ia.get("diferenciales", [])
+        cronograma       = datos_ia.get("cronograma", [])
 
-        # Color según complejidad
-        color_map = {"MUY ALTA": "#A32D2D", "MEDIA": "#854F0B", "BAJA": "#3B6D11"}
+        color_map  = {"MUY ALTA": "#A32D2D", "MEDIA": "#854F0B", "BAJA": "#3B6D11"}
         color_comp = color_map.get(complejidad, "#3B6D11")
 
         st.markdown("### 📌 Resumen clínico IA")
@@ -602,7 +617,7 @@ with col_centro:
             st.markdown(f"""
             <div class="metric-card">
                 <div class="metric-label">Clasificación probable</div>
-                <div class="metric-value" style="font-size:16px; line-height:1.3">{clasificacion}</div>
+                <div class="metric-value" style="font-size:15px; line-height:1.3">{clasificacion}</div>
                 <div class="metric-label">{sistema}</div>
             </div>
             """, unsafe_allow_html=True)
@@ -636,14 +651,13 @@ with col_centro:
 
         st.divider()
 
-        # ── Clasificación diferencial — dinámica ──
+        # ── Clasificación diferencial — dinámica ──────────────────────
         st.markdown("### 🔬 Clasificación diferencial")
 
         if diferenciales:
             for d in diferenciales:
-                nombre = d["nombre"]
-                prob   = d["probabilidad"]
-                # Fix 7: clampeado entre 0.0 y 1.0
+                nombre    = d["nombre"]
+                prob      = d["probabilidad"]
                 pct_float = max(0.0, min(1.0, prob / 100))
                 st.markdown(f"**{nombre}** — {prob}%")
                 st.progress(pct_float)
@@ -652,23 +666,20 @@ with col_centro:
 
         st.divider()
 
+        # ── Cronograma orientativo — dinámico ─────────────────────────
         st.markdown("### 🗓️ Cronograma orientativo")
 
-        timeline = [
-            ("3–6 meses", "Queiloplastia", "Cierre del labio"),
-            ("12–18 meses", "Palatoplastia", "Función del habla"),
-            ("7–9 años", "Injerto óseo alveolar", "Soporte dentario"),
-            ("14–18 años", "Rinoplastia secundaria", "Estética y función nasal"),
-        ]
-
-        for edad, proc, obj in timeline:
-            st.markdown(f"""
-            <div style="border-left:3px solid #0F6E56; padding-left:12px; margin-bottom:10px">
-                <strong>{edad}</strong><br>
-                {proc}<br>
-                <span style="color:#6c757d;font-size:12px">{obj}</span>
-            </div>
-            """, unsafe_allow_html=True)
+        if cronograma:
+            for paso in cronograma:
+                st.markdown(f"""
+                <div style="border-left:3px solid #0F6E56; padding-left:12px; margin-bottom:10px">
+                    <strong>{paso['edad']}</strong><br>
+                    {paso['procedimiento']}<br>
+                    <span style="color:#6c757d;font-size:12px">{paso['objetivo']}</span>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.caption("No se encontró cronograma en la respuesta.")
 
         st.divider()
 
@@ -676,7 +687,7 @@ with col_centro:
         with st.container(height=400):
             st.markdown(resultado_texto)
 
-        # Fix 1, 2, 5: pasar datos dinámicos al PDF
+        # PDF con todos los datos dinámicos incluyendo cronograma
         pdf_bytes = generar_pdf(
             paciente_id or "Caso IA",
             paciente_edad or "No especificada",
@@ -685,6 +696,7 @@ with col_centro:
             clasificacion,
             complejidad,
             confianza_modelo,
+            cronograma,
         )
 
         st.download_button(
