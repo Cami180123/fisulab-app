@@ -20,8 +20,6 @@ def get_logo_base64(path="fisulab.png"):
             return base64.b64encode(f.read()).decode()
     return None
 
-
-
 # ── CONFIGURACIÓN DE PÁGINA ──────────────────────────────────────────────────
 st.set_page_config(
     page_title="FISULAB ·  IA PARA APOYO DIAGNÓSTICO ClÍNICO",
@@ -154,11 +152,6 @@ div[data-testid="column"]:nth-of-type(3) {
 """, unsafe_allow_html=True)
 
 
-
-
-
-
-
 # ── PROMPT MÉDICO ────────────────────────────────────────────────────────────
 PROMPT_MEDICO = """
 Eres un asistente de apoyo diagnóstico especializado en cirugía plástica y reconstructiva
@@ -171,7 +164,7 @@ Evaluación basada únicamente en imágenes; no hay historia clínica completa.
 La información generada es para orientación y debe ser validada por un equipo médico multidisciplinar.
 
 ## ANÁLISIS INICIAL
-Describe lo que OBSERVAS objetivamente en la imagen:
+## Describe lo que OBSERVAS objetivamente en la imagen:
 - Continuidad del labio superior (unilateral/bilateral, completo/incompleto)
 - Afectación del reborde alveolar
 - Afectación del paladar duro y/o blando
@@ -279,10 +272,11 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(150, 100, 0)
     pdf.multi_cell(0, 5,
-        "AVISO: Este informe es una orientacion de apoyo basada en imagen fotografica. "
-        "No constituye un diagnostico medico definitivo. Debe ser validado por el equipo "
-        "clinico multidisciplinar de FISULAB mediante evaluacion presencial completa."
-    )
+        "IMPORTANTE: Este informe es una orientación de apoyo, basada en imagenés fotográficas"
+        "Este análisis es una guía para el médico tratante. No constituye un diagnóstico médico definitivo."
+        "Es fundamental una evaluación clínica completa y multidisciplinar por parte del equipo"
+        "de FISULAB mediante evaluacion presencial completa."
+                  )
     pdf.ln(5)
 
     # ── CONTENIDO DEL DIAGNÓSTICO ─────────────────────────────────
@@ -301,7 +295,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
     pdf.ln(3)
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 5, f"FISULAB · IA Clinica · Generado el {time.strftime('%d/%m/%Y')} · Pagina {pdf.page_no()}",
+    pdf.cell(0, 5, f"FISULAB · IA PARA APOYO DIAGNÓSTICO ClÍNICO · Generado el {time.strftime('%d/%m/%Y')} · Página {pdf.page_no()}",
              align="C")
 
     return bytes(pdf.output())
@@ -361,10 +355,9 @@ with col_izq:
     paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
     paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
     paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
-    tipo_imagen   = st.selectbox(
-        "Tipo de imagen",
-        ["Fotografía frontal", "Fotografía lateral", "Intraoral", "Radiografía panorámica"]
-    )
+    # tipo_imagen   = st.selectbox(
+    #    "Tipo de imagen",
+    #    ["Fotografía frontal", "Fotografía lateral", "Intraoral", "Radiografía panorámica"])
 
     st.divider()
 
@@ -498,34 +491,66 @@ with col_centro:
 
         st.markdown("### 📌 Resumen clínico IA")
 
-        c1, c2, c3 = st.columns(3)
+ c1, c2, c3 = st.columns(3)
 
-        with c1:
-            st.markdown("""
-            <div class="metric-card">
-                <div class="metric-label">Clasificación probable</div>
-                <div class="metric-value">Labio leporino unilateral</div>
-                <div class="metric-label">Veau / Kernahan</div>
-            </div>
-            """, unsafe_allow_html=True)
+# ── TARJETA 1: Clasificación ─────────────────────
+with c1:
+    st.markdown("""
+    <div class="metric-card">
+        <div class="metric-label">Clasificación probable</div>
+        <div class="metric-value">Labio<br>leporino<br>unilateral</div>
+        <div class="metric-label">Veau / Kernahan</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with c2:
-            st.markdown(
-                f"""
-                <div class="metric-card">
-                    <div class="metric-label">Complejidad estimada</div>
-                    <div class="metric-value" style="color:{color_comp}">
-                        {complejidad}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+# ── TARJETA 2: Complejidad ───────────────────────
+with c2:
+    st.markdown(f"""
+    <div class="metric-card">
+        <div class="metric-label">Complejidad estimada</div>
+        <div class="metric-value" style="color:{color_comp}">
+            {complejidad}
+        </div>
+        <div class="metric-label">Nivel clínico</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with c3:
-            st.markdown("**Confianza del modelo**")
-            st.progress(confianza_modelo / 100)
-            st.caption("Resultado orientativo · Requiere validación clínica")
+# ── TARJETA 3: Confianza del modelo ──────────────
+with c3:
+    st.markdown(f"""
+    <div class="metric-card">
+        <div class="metric-label">Confianza del modelo</div>
+
+        <!-- Barra de progreso -->
+        <div style="
+            width:100%;
+            height:8px;
+            background:#e9ecef;
+            border-radius:6px;
+            overflow:hidden;
+            margin:6px 0;
+        ">
+            <div style="
+                width:{confianza_modelo}%;
+                height:100%;
+                background:#1d7af3;
+            "></div>
+        </div>
+
+        <!-- Porcentaje visible -->
+        <div style="
+            font-size:14px;
+            font-weight:600;
+            color:#1d7af3;
+        ">
+            {confianza_modelo}%
+        </div>
+
+        <div class="metric-label">
+            Resultado orientativo · Requiere validación
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
         st.divider()
 
