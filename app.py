@@ -31,12 +31,14 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 12px;
-    padding: 14px 24px;
+    padding: 12px 24px;        /* ↓ un poco menos alto */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-top: 2px;          /* ✅ SUBE la topbar */
+    margin-bottom: 6px;       /* ✅ reduce espacio inferior */
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+
 }
 .topbar-title {
     color: #085041;
