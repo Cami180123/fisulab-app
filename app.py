@@ -428,44 +428,38 @@ Datos del paciente:
         with col_centro:
             st.error(f"❌ Error al conectar con la API: {str(e)}")
 
+
 # ════════════════════════════════════════════════════════════
 # COLUMNA CENTRO — Panel de resultados
 # ════════════════════════════════════════════════════════════
 with col_centro:
 
-    # ── ESTADO VACÍO ─────────────────────────────────────────
-    # Se muestra cuando aún no hay ningún análisis realizado.
-    # Desaparece en cuanto st.session_state.resultado tiene contenido.
     if st.session_state.resultado is None:
         st.markdown("""
         <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 400px;
-            color: #adb5bd;
-            text-align: center;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            height:400px;
+            color:#adb5bd;
+            text-align:center;
         ">
-            <div style="font-size: 48px; margin-bottom: 16px;">🔬</div>
-            <div style="font-size: 16px; font-weight: 500; color: #6c757d;">Sin análisis aún</div>
-            <div style="font-size: 13px; margin-top: 8px; max-width: 280px; line-height: 1.6; color: #adb5bd;">
-                Carga una imagen clínica y presiona <strong>Analizar con IA</strong>
-                para obtener el informe diagnóstico orientativo.
+            <div style="font-size:48px;">🔬</div>
+            <div style="font-size:16px;font-weight:500;color:#6c757d">
+                Sin análisis aún
+            </div>
+            <div style="font-size:13px;margin-top:8px;color:#adb5bd">
+                Carga una imagen y presiona <strong>Analizar con IA</strong>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
     else:
-        # ── TÍTULO DEL PANEL ──────────────────────────────────
-        # Encabezado visible una vez que hay resultado disponible.
-        st.markdown("### 📋 Informe clínico IA")
-
         # ── PREPARACIÓN DEL RESULTADO ─────────────────────────
         resultado_texto = st.session_state.resultado
         texto_upper = resultado_texto.upper()
-        
-        # Inferencia simple de complejidad (MVP clínico)
+
         if "MUY ALTA" in texto_upper or "MUY ALTO" in texto_upper:
             complejidad = "MUY ALTA"
             color_comp = "#A32D2D"
@@ -475,55 +469,83 @@ with col_centro:
         else:
             complejidad = "BAJA"
             color_comp = "#3B6D11"
-        
-        # Confianza simulada (luego puede venir estructurada desde el modelo)
+
         confianza_modelo = 85
 
-
-        # ── SECCIÓN 1: TRES MÉTRICAS SUPERIORES ──────────────
         st.markdown("### 📌 Resumen clínico IA")
-        
+
         c1, c2, c3 = st.columns(3)
-        
-        # ── CARD 1: Clasificación principal ───────────────────
+
         with c1:
             st.markdown("""
             <div class="metric-card">
                 <div class="metric-label">Clasificación probable</div>
                 <div class="metric-value">Labio leporino unilateral</div>
-                <div class="metric-label">Clasificación Veau / Kernahan</div>
+                <div class="metric-label">Veau / Kernahan</div>
             </div>
             """, unsafe_allow_html=True)
-        
-        # ── CARD 2: Complejidad ───────────────────────────────
+
         with c2:
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-label">Complejidad estimada</div>
-                <div class="metric-value" style="color:{color_comp}">
-                    {complejidad}
+            st.markdown(
+                f"""
+                <div class="metric-card">
+                    <div class="metric-label">Complejidad estimada</div>
+                    <div class="metric-value" style="color:{color_comp}">
+                        {complejidad}
+                    </div>
                 </div>
-                <div class="metric-label">Número de intervenciones</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # ── CARD 3: Confianza del modelo ──────────────────────
+                """,
+                unsafe_allow_html=True
+            )
+
         with c3:
             st.markdown("**Confianza del modelo**")
             st.progress(confianza_modelo / 100)
             st.caption("Resultado orientativo · Requiere validación clínica")
 
-        
-st.divider()
-st.markdown("### 🔬 Clasificación diferencial")
+        st.divider()
 
-def barra_confianza(nombre, porcentaje):
-    st.markdown(f"**{nombre}**")
-    st.progress(porcentaje / 100)
+        st.markdown("### 🔬 Clasificación diferencial")
+        st.markdown("**LL unilateral completo**")
+        st.progress(0.87)
 
-barra_confianza("Labio leporino unilateral completo", 87)
-barra_confianza("Labio + paladar hendido", 9)
-barra_confianza("Labio leporino unilateral incompleto", 4)
+        st.markdown("**Labio + paladar hendido**")
+        st.progress(0.09)
+
+        st.markdown("**LL unilateral incompleto**")
+        st.progress(0.04)
+
+        st.divider()
+
+        st.markdown("### 🗓️ Cronograma orientativo de tratamiento")
+
+        timeline = [
+            ("3–6 meses", "Queiloplastia", "Corrección del labio"),
+            ("12–18 meses", "Palatoplastia", "Función del habla"),
+            ("7–9 años", "Injerto óseo alveolar", "Soporte dentario"),
+            ("14–18 años", "Rinoplastia secundaria", "Estética y función"),
+        ]
+
+        for edad, proc, obj in timeline:
+            st.markdown(
+                f"""
+                <div style="border-left:4px solid #0F6E56;padding-left:12px;margin-bottom:10px">
+                    <strong>{edad}</strong><br>
+                    {proc}<br>
+                    <span style="font-size:12px;color:#6c757d">
+                        Objetivo: {obj}
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        st.divider()
+
+        st.markdown("### 📄 Informe clínico completo")
+        with st.container(height=350):
+            st.markdown(resultado_texto)
+
         
         # ── SEPARADOR VISUAL ──────────────────────────────────
         st.divider()
