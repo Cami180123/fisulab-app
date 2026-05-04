@@ -590,7 +590,7 @@ with st.container(height=400):
 
 
         # ── SEPARADOR VISUAL ──────────────────────────────────
-        st.divider()
+        #st.divider()
 
         # ── SECCIÓN 3: BOTONES DE ACCIÓN ─────────────────────
         # Tres botones en fila para las acciones principales
