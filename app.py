@@ -127,7 +127,7 @@ header     {visibility: hidden;}
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-   LAYOUT FULL SCREEN SIN SCROLL GLOBAL
+#  LAYOUT FULL SCREEN SIN SCROLL GLOBAL
 # ─────────────────────────────────────────────
 html, body {
     height: 100%;
