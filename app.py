@@ -139,7 +139,8 @@ section[data-testid="stAppViewContainer"] {
 section[data-testid="stAppViewContainer"] > div {
     height: 100vh;
 }
-/* Columnas con scroll interno */
+
+# Columnas con scroll interno
 div[data-testid="column"]:nth-of-type(1),
 div[data-testid="column"]:nth-of-type(2),
 div[data-testid="column"]:nth-of-type(3) {
