@@ -618,8 +618,6 @@ with c3:
     </div>
     """, unsafe_allow_html=True)
 
-        st.divider()
-
         st.markdown("### 🔬 Clasificación diferencial")
         st.progress(0.87, text="LL unilateral completo")
         st.progress(0.09, text="Labio + paladar hendido")
