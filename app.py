@@ -612,7 +612,7 @@ with col_centro:
         with st.container(height=400):
             st.markdown(resultado_texto)
                 
-       pdf_bytes = generar_pdf(
+        pdf_bytes = generar_pdf(
             paciente_id or "Caso IA",
             paciente_edad or "No especificada",
             paciente_sexo,
