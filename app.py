@@ -424,7 +424,7 @@ with col_izq:
     paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
     paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
     paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
-     ── */ tipo_imagen   = st.selectbox("Tipo de imagen",["Fotografía frontal", "Fotografía lateral", "Intraoral", "Radiografía panorámica"]) ── */
+    tipo_imagen   = st.selectbox("Tipo de imagen",["Fotografía frontal", "Fotografía lateral", "Intraoral", "Radiografía panorámica"])
 
     st.divider()
 
@@ -479,7 +479,7 @@ Datos del paciente:
 - ID / Nombre: {paciente_id if paciente_id else 'No proporcionado'}
 - Edad: {paciente_edad if paciente_edad else 'No proporcionada'}
 - Sexo: {paciente_sexo}
-── */ - Tipo de imagen: {tipo_imagen} ── */
+- Tipo de imagen: {tipo_imagen}
 """
         prompt_completo = contexto_paciente + "\n\n" + PROMPT_MEDICO
 
