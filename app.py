@@ -175,7 +175,7 @@ Evaluación basada únicamente en imágenes; no hay historia clínica completa.
 La información generada es para orientación y debe ser validada por un equipo médico multidisciplinar.
 
 ## ANÁLISIS INICIAL
-## Describe lo que OBSERVAS objetivamente en la imagen:
+Describe lo que OBSERVAS objetivamente en la imagen:
 - Continuidad del labio superior (unilateral/bilateral, completo/incompleto)
 - Afectación del reborde alveolar
 - Afectación del paladar duro y/o blando
@@ -245,7 +245,6 @@ No omitas este bloque bajo ninguna circunstancia.
 }
 ```
 """
-
 
 # ── FUNCIÓN: parsear JSON estructurado de la respuesta de Gemini ─────────────
 def parsear_json_ia(texto):
@@ -413,10 +412,11 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(150, 100, 0)
     pdf.multi_cell(0, 5,
-        "IMPORTANTE: Este informe es una orientacion de apoyo, basada en imagenes fotograficas. "
-        "No constituye un diagnostico medico definitivo. "
-        "Es fundamental una evaluacion clinica completa y multidisciplinar por parte del equipo "
-        "de FISULAB mediante evaluacion presencial completa."
+        "IMPORTANTE: Este análisis es una orientación de apoyo basada exclusivamente en imágenes fotográficas.
+        "No constituye un diagnóstico medico definitivo. La clasificación y el plan de tratamiento deben ser validados 
+        por el equipo clínico multidisciplinar de FISULAB mediante evaluacion presencial completa."
+        "El modelo puede tener sesgos según la calidad, ángulo e iluminación de la imagen."
+        
     )
     pdf.ln(5)
 
