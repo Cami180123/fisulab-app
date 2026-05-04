@@ -17,7 +17,7 @@ import json
 
 # ── CONFIGURACIÓN DE PÁGINA ──────────────────────────────────────────────────
 st.set_page_config(
-    page_title="FISULAB ·  IA PARA APOYO DIAGNÓSTICO ClÍNICO",
+    page_title="FISULAB · IA PARA APOYO DE DIAGNÓSTICO CLÍNICO",
     page_icon="🏥",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -182,7 +182,7 @@ Describe lo que OBSERVAS objetivamente en la imagen:
 - Simetría nasal y deformidad asociada
 - Calidad y limitaciones de la imagen
 
-## 1. CLASIFICACIÓN CLÍNICA PROBABLE
+# 1. CLASIFICACIÓN CLÍNICA PROBABLE
 Identifica cuál categoría corresponde:
 - Labio Normal (sin hendidura)
 - Labio Leporino (LL) Unilateral Incompleto
@@ -191,39 +191,39 @@ Identifica cuál categoría corresponde:
 - Labio y Paladar Hendido
 - No determinable (imagen insuficiente)
 
-## 2. CARACTERÍSTICAS CLÍNICAS OBSERVADAS
+# 2. CARACTERÍSTICAS CLÍNICAS OBSERVADAS
 Hallazgos visuales que justifican la clasificación.
 
-## 3. PRESUNTO DIAGNÓSTICO
+# 3. PRESUNTO DIAGNÓSTICO
 Nombre técnico según clasificación de Veau o Kernahan.
 
-## 4. PLAN DE TRATAMIENTO ORIENTATIVO
+# 4. PLAN DE TRATAMIENTO ORIENTATIVO
 Tabla con:
 | Procedimiento | Número estimado | Objetivo |
 
-## 5. CRONOGRAMA POR RANGO DE EDAD
+# 5. CRONOGRAMA POR RANGO DE EDAD
 Tabla con:
 | Intervención | Rango de edad | Justificación |
 
-## 6. NIVEL DE COMPLEJIDAD
+# 6. NIVEL DE COMPLEJIDAD
 - Menos de 2 intervenciones: BAJA
 - Entre 3 y 5 intervenciones: MEDIA
 - Más de 5 intervenciones: MUY ALTA
 
 Justifica brevemente considerando extensión, compromiso alveolar/nasal, necesidad de ortodoncia, riesgos funcionales.
 
-## 7. CONSIDERACIONES ADICIONALES
+# 7. CONSIDERACIONES ADICIONALES
 Especialidades requeridas: ortopedia prequirúrgica, fonoaudiología, ortodoncia, psicología, etc.
 
-## 8. DATOS FALTANTES Y ADVERTENCIAS
+# 8. DATOS FALTANTES Y ADVERTENCIAS
 Señala qué información faltante podría cambiar el pronóstico.
 
 ---
 IMPORTANTE: Este análisis es una guía de apoyo para el médico tratante. No constituye un
-diagnóstico médico definitivo. Es fundamental una evaluación clínica completa y multidisciplinar.
+diagnóstico médico definitivo. Es fundamental una evaluación clínica completa y multidisciplinar de FISULAB mediante evaluación presencial completa.
 
 ---
-## BLOQUE ESTRUCTURADO (OBLIGATORIO)
+# BLOQUE ESTRUCTURADO (OBLIGATORIO)
 Al FINAL de tu respuesta incluye SIEMPRE este bloque JSON exacto con los valores reales del caso.
 No omitas este bloque bajo ninguna circunstancia.
 
@@ -412,9 +412,9 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(150, 100, 0)
     pdf.multi_cell(0, 5,
-        "IMPORTANTE: Este análisis es una orientación de apoyo basada exclusivamente en imágenes fotográficas.
-        "No constituye un diagnóstico medico definitivo. La clasificación y el plan de tratamiento deben ser validados 
-        por el equipo clínico multidisciplinar de FISULAB mediante evaluacion presencial completa."
+        "IMPORTANTE: Este análisis es una orientación de apoyo basada exclusivamente en imágenes fotográficas."
+        "No constituye un diagnóstico medico definitivo. La clasificación y el plan de tratamiento deben ser validados" 
+        "por el equipo clínico multidisciplinar de FISULAB mediante evaluacion presencial completa."
         "El modelo puede tener sesgos según la calidad, ángulo e iluminación de la imagen."
         
     )
@@ -627,7 +627,7 @@ with col_centro:
         color_map  = {"MUY ALTA": "#A32D2D", "MEDIA": "#854F0B", "BAJA": "#3B6D11"}
         color_comp = color_map.get(complejidad, "#3B6D11")
 
-        st.markdown("### 📌 Resumen clínico IA")
+        st.markdown("## 📌 Resumen clínico IA")
 
         c1, c2, c3 = st.columns(3)
 
@@ -670,7 +670,7 @@ with col_centro:
         st.divider()
 
         # ── Clasificación diferencial — dinámica ──────────────────────
-        st.markdown("### 🔬 Clasificación diferencial")
+        st.markdown("## 🔬 Clasificación diferencial")
 
         if diferenciales:
             for d in diferenciales:
@@ -685,7 +685,7 @@ with col_centro:
         st.divider()
 
         # ── Cronograma orientativo — dinámico ─────────────────────────
-        st.markdown("### 🗓️ Cronograma orientativo")
+        st.markdown("## 🗓️ Cronograma orientativo")
 
         if cronograma:
             for paso in cronograma:
@@ -717,7 +717,12 @@ with col_centro:
             cronograma,
         )
 
-        st.download_button(
+        st.divider ()
+        # Botones de acción
+        b1, b2, b3 = st.columns(3)
+        
+        with b1:
+            st.download_button(
             "📄 Exportar PDF clínico",
             data=pdf_bytes,
             file_name=f"fisulab_{time.strftime('%Y%m%d')}.pdf",
@@ -725,11 +730,22 @@ with col_centro:
             use_container_width=True
         )
 
+        with b2:
+            if st.button("🔄 Nuevo análisis", use_container_width=True):
+                st.session_state.resultado = None
+                st.rerun()
+        with b3:
+            st.button("💾 Guardar en sistema", use_container_width=True, disabled=True,
+                      help="Función de integración con base de datos — próximamente") 
+
+      # ── Disclaimer ético ─────────────────────────
         st.markdown("""
         <div class="disclaimer">
             <strong>⚠️ Aviso importante:</strong>
-            Este análisis es una orientación basada en imagen.
-            No constituye diagnóstico médico definitivo.
+            Este análisis es una orientación basada en imagénes.
+            No constituye un diagnóstico médico definitivo. La clasificación y el plan de tratamiento deben ser validados 
+            por el equipo clínico multidisciplinar de FISULAB mediante evaluacion presencial completa.
+            El modelo puede tener sesgos según la calidad, ángulo e iluminación de la imagen
         </div>
         """, unsafe_allow_html=True)
 
