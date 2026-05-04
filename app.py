@@ -619,7 +619,7 @@ with c3:
     </div>
     """, unsafe_allow_html=True)
 
-                st.divider()
+        st.divider()
 
         st.markdown("### 🔬 Clasificación diferencial")
         st.progress(0.87, text="LL unilateral completo")
