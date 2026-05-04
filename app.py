@@ -35,7 +35,7 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 .topbar-title {
