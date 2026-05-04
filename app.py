@@ -123,30 +123,41 @@ html, body, [class*="css"] { font-family: 'Segoe UI', sans-serif; }
 #MainMenu {visibility: hidden;}
 footer     {visibility: hidden;}
 header     {visibility: hidden;}
-</style>
-""", unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-#  LAYOUT FULL SCREEN SIN SCROLL GLOBAL
-# ─────────────────────────────────────────────
+# ============================================
+# FULLSCREEN LAYOUT WITHOUT GLOBAL SCROLL
+# ===========================================
+
 html, body {
     height: 100%;
     overflow: hidden;
 }
+
 section[data-testid="stAppViewContainer"] {
     height: 100vh;
 }
+
 section[data-testid="stAppViewContainer"] > div {
     height: 100vh;
 }
 
-# Columnas con scroll interno
 div[data-testid="column"]:nth-of-type(1),
 div[data-testid="column"]:nth-of-type(2),
 div[data-testid="column"]:nth-of-type(3) {
     height: calc(100vh - 110px);
     overflow-y: auto;
 }
+
+
+
+</style>
+""", unsafe_allow_html=True)
+
+
+
+
+
+
 
 # ── PROMPT MÉDICO ────────────────────────────────────────────────────────────
 PROMPT_MEDICO = """
