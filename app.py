@@ -202,10 +202,68 @@ Señala qué información faltante podría cambiar el pronóstico.
 ---
 IMPORTANTE: Este análisis es una guía de apoyo para el médico tratante. No constituye un
 diagnóstico médico definitivo. Es fundamental una evaluación clínica completa y multidisciplinar.
+
+---
+## BLOQUE ESTRUCTURADO (OBLIGATORIO)
+Al FINAL de tu respuesta, incluye SIEMPRE este bloque JSON exacto, sin modificar las claves,
+con los valores que correspondan a tu análisis. No omitas este bloque bajo ninguna circunstancia.
+
+```json
+{
+  "clasificacion_principal": "<nombre técnico breve, ej: LL Unilateral Completo>",
+  "sistema": "<clasificación Veau y/o Kernahan, ej: Veau II / Kernahan>",
+  "complejidad": "<BAJA | MEDIA | MUY ALTA>",
+  "confianza_principal": <número entero 0-100>,
+  "diferenciales": [
+    {"nombre": "<diagnóstico 1>", "probabilidad": <número entero 0-100>},
+    {"nombre": "<diagnóstico 2>", "probabilidad": <número entero 0-100>},
+    {"nombre": "<diagnóstico 3>", "probabilidad": <número entero 0-100>}
+  ]
+}
+```
 """
 
+# ── FUNCIÓN: parsear JSON estructurado de la respuesta de Gemini ─────────────
+def parsear_json_ia(texto):
+    """
+    Extrae y parsea el bloque JSON al final de la respuesta de Gemini.
+    Retorna un dict con los datos clínicos o valores por defecto si falla.
+    """
+    FALLBACK = {
+        "clasificacion_principal": "No determinada",
+        "sistema": "—",
+        "complejidad": "BAJA",
+        "confianza_principal": 0,
+        "diferenciales": []
+    }
+    try:
+        import re, json
+        # Busca el bloque ```json ... ``` al final del texto
+        match = re.search(r"```json\s*(\{.*?\})\s*```", texto, re.DOTALL)
+        if not match:
+            return FALLBACK
+        datos = json.loads(match.group(1))
+        # Normalizar y validar cada campo
+        datos["clasificacion_principal"] = str(datos.get("clasificacion_principal", "No determinada"))
+        datos["sistema"]                 = str(datos.get("sistema", "—"))
+        datos["complejidad"]             = str(datos.get("complejidad", "BAJA")).upper()
+        datos["confianza_principal"]     = max(0, min(100, int(datos.get("confianza_principal", 0))))
+        # Normalizar diferenciales: clampear probabilidades entre 0 y 100
+        diferenciales = datos.get("diferenciales", [])
+        datos["diferenciales"] = [
+            {
+                "nombre": str(d.get("nombre", "—")),
+                "probabilidad": max(0, min(100, int(d.get("probabilidad", 0))))
+            }
+            for d in diferenciales if isinstance(d, dict)
+        ]
+        return datos
+    except Exception:
+        return FALLBACK
+
 # ── FUNCIÓN: generar PDF ─────────────────────────────────────────────────────
-def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto):
+def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
+                clasificacion="No determinada", complejidad="N/D", confianza_modelo=0):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_margins(15, 15, 15)
@@ -350,6 +408,8 @@ if "resultado" not in st.session_state:
     st.session_state.resultado = None
 if "datos_paciente" not in st.session_state:
     st.session_state.datos_paciente = {}
+if "datos_ia" not in st.session_state:
+    st.session_state.datos_ia = {}
 
 # API key desde secrets o variable de entorno
 API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -368,8 +428,8 @@ st.markdown(f"""
     <div style="display:flex; align-items:center; gap:14px;">
         {logo_html}
         <div>
-            <div class="topbar-title">FISULAB · IA Clínica</div>
-            <div class="topbar-sub">Apoyo diagnóstico — labio y paladar hendido</div>
+            <div class="topbar-title">FISULAB · IA PARA APOYO DE DIAGNÓSTICO ClÍNICO</div>
+            <div class="topbar-sub">Labio y paladar hendido</div>
         </div>
     </div>
     <div class="topbar-badge">⚠️ No reemplaza un diagnóstico médico profesional</div>
@@ -419,6 +479,7 @@ with col_izq:
     if st.button("🆕 Nuevo paciente", use_container_width=True):
         st.session_state.resultado = None
         st.session_state.datos_paciente = {}
+        st.session_state.datos_ia = {}
         st.rerun()
 
 # ════════════════════════════════════════════════════════════
@@ -463,14 +524,13 @@ Datos del paciente:
                     "sexo": paciente_sexo,
                 }
 
-                # Detectar complejidad para el historial
-                texto = response.text.upper()
-                if "MUY ALTA" in texto or "MUY ALTO" in texto:
-                    comp = "alta"
-                elif "MEDIA" in texto:
-                    comp = "media"
-                else:
-                    comp = "baja"
+                # Parsear JSON estructurado de la respuesta
+                datos_ia = parsear_json_ia(response.text)
+                st.session_state.datos_ia = datos_ia
+
+                # Detectar complejidad desde el JSON (Fix 2: ya no depende de str.upper() sobre texto libre)
+                comp_map = {"MUY ALTA": "alta", "MEDIA": "media", "BAJA": "baja"}
+                comp = comp_map.get(datos_ia["complejidad"], "baja")
 
                 st.session_state.historial.insert(0, {
                     "nombre": paciente_id or f"Caso {len(st.session_state.historial)+1}",
@@ -503,45 +563,29 @@ with col_centro:
 
     else:
         resultado_texto = st.session_state.resultado
-        texto_upper = resultado_texto.upper()
+        datos_ia = st.session_state.datos_ia
 
-        # ── Complejidad ──
-        if "MUY ALTA" in texto_upper or "MUY ALTO" in texto_upper:
-            complejidad = "MUY ALTA"
-            color_comp = "#A32D2D"
-        elif "MEDIA" in texto_upper:
-            complejidad = "MEDIA"
-            color_comp = "#854F0B"
-        else:
-            complejidad = "BAJA"
-            color_comp = "#3B6D11"
+        # ── Leer datos dinámicos del JSON parseado ──
+        clasificacion  = datos_ia.get("clasificacion_principal", "No determinada")
+        sistema        = datos_ia.get("sistema", "—")
+        complejidad    = datos_ia.get("complejidad", "BAJA")
+        confianza_modelo = datos_ia.get("confianza_principal", 0)
+        diferenciales  = datos_ia.get("diferenciales", [])
 
-        confianza_modelo = 85 
-
-        # ── Datos clínicos coherentes (pantalla y PDF)
-        datos_pdf = {
-            "clasificacion": "Labio leporino unilateral",
-            "clasificacion_sistema": "Veau / Kernahan",
-            "complejidad": complejidad,
-            "confianza": confianza_modelo,
-            "timeline": [
-                ("3–6 meses", "Queiloplastia", "Corrección del labio"),
-                ("12–18 meses", "Palatoplastia", "Función del habla"),
-                ("7–9 años", "Injerto óseo alveolar", "Soporte dentario"),
-                ("14–18 años", "Rinoplastia secundaria", "Estética y función"),
-            ]
-        }
+        # Color según complejidad
+        color_map = {"MUY ALTA": "#A32D2D", "MEDIA": "#854F0B", "BAJA": "#3B6D11"}
+        color_comp = color_map.get(complejidad, "#3B6D11")
 
         st.markdown("### 📌 Resumen clínico IA")
 
         c1, c2, c3 = st.columns(3)
 
         with c1:
-            st.markdown("""
+            st.markdown(f"""
             <div class="metric-card">
                 <div class="metric-label">Clasificación probable</div>
-                <div class="metric-value">Labio<br>leporino<br>unilateral</div>
-                <div class="metric-label">Veau / Kernahan</div>
+                <div class="metric-value" style="font-size:16px; line-height:1.3">{clasificacion}</div>
+                <div class="metric-label">{sistema}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -559,9 +603,9 @@ with col_centro:
             st.markdown(f"""
             <div class="metric-card">
                 <div class="metric-label">Confianza del modelo</div>
-                <div style="width:100%;height:8px;background:#e9ecef;border-radius:6px;">
+                <div style="width:100%;height:8px;background:#e9ecef;border-radius:6px;margin:6px 0;">
                     <div style="width:{confianza_modelo}%;
-                                height:8px;background:#1d7af3;"></div>
+                                height:8px;background:#1d7af3;border-radius:6px;"></div>
                 </div>
                 <div style="font-weight:700;color:#1d7af3">
                     {confianza_modelo} %
@@ -574,18 +618,20 @@ with col_centro:
 
         st.divider()
 
-        # ── Clasificación diferencial
-        
+        # ── Clasificación diferencial — dinámica ──
         st.markdown("### 🔬 Clasificación diferencial")
-        
-        def barra(nombre, pct):
-            st.markdown(f"**{nombre}**")
-            st.progress(pct / 100)
-        
-        barra("LL unilateral completo", 87)
-        barra("LL + paladar hendido", 9)
-        barra("LL unilateral incompleto", 4)
-        
+
+        if diferenciales:
+            for d in diferenciales:
+                nombre = d["nombre"]
+                prob   = d["probabilidad"]
+                # Fix 7: clampeado entre 0.0 y 1.0
+                pct_float = max(0.0, min(1.0, prob / 100))
+                st.markdown(f"**{nombre}** — {prob}%")
+                st.progress(pct_float)
+        else:
+            st.caption("No se encontraron diagnósticos diferenciales en la respuesta.")
+
         st.divider()
 
         st.markdown("### 🗓️ Cronograma orientativo")
@@ -596,7 +642,7 @@ with col_centro:
             ("7–9 años", "Injerto óseo alveolar", "Soporte dentario"),
             ("14–18 años", "Rinoplastia secundaria", "Estética y función nasal"),
         ]
-        
+
         for edad, proc, obj in timeline:
             st.markdown(f"""
             <div style="border-left:3px solid #0F6E56; padding-left:12px; margin-bottom:10px">
@@ -607,16 +653,20 @@ with col_centro:
             """, unsafe_allow_html=True)
 
         st.divider()
-        
+
         st.markdown("### 📄 Informe completo")
         with st.container(height=400):
             st.markdown(resultado_texto)
-                
+
+        # Fix 1, 2, 5: pasar datos dinámicos al PDF
         pdf_bytes = generar_pdf(
             paciente_id or "Caso IA",
             paciente_edad or "No especificada",
             paciente_sexo,
             resultado_texto,
+            clasificacion,
+            complejidad,
+            confianza_modelo,
         )
 
         st.download_button(
