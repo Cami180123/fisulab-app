@@ -744,7 +744,9 @@ with col_centro:
                         <div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">
                             📅 {paso['edad']}
                         </div>
-                        {cantidad_html}
+                        <div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">
+                            🔢 {paso['cantidad_texto']}</div>
+                        </div>
                         <div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">
                             🎯 {paso['objetivo']}
                         </div>
