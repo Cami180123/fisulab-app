@@ -726,30 +726,16 @@ with col_centro:
 
                 st.markdown(f"""
                 <div style="display:flex;gap:14px;margin-bottom:14px;">
-                    <!-- Número de paso -->
                     <div style="min-width:28px;height:28px;border-radius:50%;
                                 background:{color}20;border:1.5px solid {color};
                                 display:flex;align-items:center;justify-content:center;
                                 font-size:11px;font-weight:700;color:{color};flex-shrink:0;
-                                margin-top:2px;">
-                        {i+1}
-                    </div>
-                    <!-- Contenido -->
+                                margin-top:2px;">{i+1}</div>
                     <div style="border-left:3px solid {color};padding-left:12px;flex:1;">
-                        <!-- Intervención -->
-                        <div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">
-                            {paso['procedimiento']}
-                        </div>
-                        <!-- Edad recomendada -->
-                        <div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">
-                            📅 {paso['edad']}
-                        </div>
-                        <div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">
-                            🔢 {paso['cantidad_texto']}</div>
-                        </div>
-                        <div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">
-                            🎯 {paso['objetivo']}
-                        </div>
+                        <div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">{paso['procedimiento']}</div>
+                        <div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">📅 {paso['edad']}</div>
+                        {cantidad_html}
+                        <div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">🎯 {paso['objetivo']}</div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
