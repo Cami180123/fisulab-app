@@ -239,11 +239,8 @@ No omitas este bloque bajo ninguna circunstancia.
     {"nombre": "<diagnóstico 3>", "probabilidad": <número entero 0-100>}
   ],
   "cronograma": [
-    {"edad": "<rango de edad>", "procedimiento": "<nombre>", "objetivo": "<descripción breve>"},
-    {"edad": "<rango de edad>", "procedimiento": "<nombre>", "objetivo": "<descripción breve>"}
-  ]
-  "<descripción breve>"},
-    {"edad": "<rango de edad>", "procedimiento": "<nombre>", "objetivo": "<descripción breve>"}
+    {"edad": "<rango de edad>", "procedimiento": "<nombre>", "cantidad": <número entero de intervenciones de ese tipo>, "objetivo": "<descripción breve>"},
+    {"edad": "<rango de edad>", "procedimiento": "<nombre>", "cantidad": <número entero de intervenciones de ese tipo>, "objetivo": "<descripción breve>"}
   ]
 }
 ```
@@ -288,6 +285,7 @@ def parsear_json_ia(texto):
             {
                 "edad":          str(c.get("edad", "—")),
                 "procedimiento": str(c.get("procedimiento", "—")),
+                "cantidad":      str(c.get("cantidad", "")),
                 "objetivo":      str(c.get("objetivo", "—")),
             }
             for c in datos.get("cronograma", []) if isinstance(c, dict)
@@ -296,7 +294,6 @@ def parsear_json_ia(texto):
         return datos
     except Exception:
         return FALLBACK
-
 
 # ── FUNCIÓN: generar PDF ─────────────────────────────────────────────────────
 def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
@@ -717,31 +714,22 @@ with col_centro:
                 # Intentar extraer cantidad de intervenciones del campo objetivo o procedimiento
                 # El JSON base no tiene ese campo, así que lo inferimos del texto si está presente
                 cantidad_texto = paso.get("cantidad", "")
-                cantidad_html = f"""
-                    <span style="display:inline-block;background:#f1f3f5;color:#495057;
-                                 font-size:11px;padding:2px 8px;border-radius:12px;margin-top:4px;">
-                        🔢 {cantidad_texto} intervenciones estimadas
-                    </span>
-                """ if cantidad_texto else ""
+                if cantidad_texto:
+                    cantidad_html = f'<span style="display:inline-block;background:#f1f3f5;color:#495057;font-size:11px;padding:2px 8px;border-radius:12px;margin-top:4px;">🔢 {cantidad_texto} intervenciones estimadas</span>'
+                else:
+                    cantidad_html = ""
 
-                st.markdown(f"""
-                <div style="display:flex;gap:14px;margin-bottom:14px;">
-                    <div style="min-width:28px;height:28px;border-radius:50%;
-                                background:{color}20;border:1.5px solid {color};
-                                display:flex;align-items:center;justify-content:center;
-                                font-size:11px;font-weight:700;color:{color};flex-shrink:0;
-                                margin-top:2px;">{i+1}</div>
-                    <div style="border-left:3px solid {color};padding-left:12px;flex:1;">
-                        <div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">{paso['procedimiento']}</div>
-                        <div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">📅 {paso['edad']}</div>
-                        {cantidad_html}
-                        <div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">🎯 {paso['objetivo']}</div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                # Construir HTML del paso como string Python — sin f-string anidado para el objetivo
+                num_circulo = f'<div style="min-width:28px;height:28px;border-radius:50%;background:{color}20;border:1.5px solid {color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{color};flex-shrink:0;margin-top:2px;">{i+1}</div>'
+                titulo      = f'<div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">{paso["procedimiento"]}</div>'
+                edad_div    = f'<div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">📅 {paso["edad"]}</div>'
+                objetivo_div= f'<div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">🎯 {paso["objetivo"]}</div>'
+                contenido   = f'<div style="border-left:3px solid {color};padding-left:12px;flex:1;">{titulo}{edad_div}{cantidad_html}{objetivo_div}</div>'
+                html_paso   = f'<div style="display:flex;gap:14px;margin-bottom:14px;">{num_circulo}{contenido}</div>'
+                st.markdown(html_paso, unsafe_allow_html=True)
         else:
             st.caption("No se encontró cronograma en la respuesta.")
-
+        
         # ── Equipo multidisciplinar recomendado ───────────────────────
         st.markdown("👥 Equipo multidisciplinar recomendado")
 
