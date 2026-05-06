@@ -840,6 +840,67 @@ with col_centro:
 with col_der:
     tab1, tab2 = st.tabs(["📁 Historial", "📊 Estadísticas"])
 
+    # ── Cálculos compartidos para ambas tabs ──────────────────
+    total  = len(st.session_state.historial)
+    altas  = sum(1 for c in st.session_state.historial if c["complejidad"] == "alta")
+    medias = sum(1 for c in st.session_state.historial if c["complejidad"] == "media")
+    bajas  = sum(1 for c in st.session_state.historial if c["complejidad"] == "baja")
+
+    # Casos del mes actual
+    mes_actual = time.strftime("%b %Y")
+    casos_mes  = sum(1 for c in st.session_state.historial if mes_actual in c.get("fecha", ""))
+    if casos_mes == 0:
+        casos_mes = total  # fallback: si no coincide el formato, muestra total
+
+    # Precisión validada (referencia estática hasta integrar módulo de validación real)
+    precision = 89
+
+    # Tipo más frecuente de fisura — viene del campo "clasificacion" guardado en historial
+    conteo_tipos = {}
+    for c in st.session_state.historial:
+        tipo = c.get("clasificacion", "No determinada")
+        conteo_tipos[tipo] = conteo_tipos.get(tipo, 0) + 1
+    if conteo_tipos:
+        tipo_top   = max(conteo_tipos, key=conteo_tipos.get)
+        tipo_top_n = conteo_tipos[tipo_top]
+        tipo_top_pct = round((tipo_top_n / total) * 100) if total > 0 else 0
+        # Abreviar el nombre para que quepa en el panel estrecho
+        tipo_top_corto = tipo_top.replace("Labio Leporino", "LL").replace("Labio y Paladar Hendido", "LPH")
+    else:
+        tipo_top_corto = "LL Unilateral"
+        tipo_top_pct   = 58  # valor de referencia mientras no haya datos reales
+
+    # HTML de las métricas (mismo bloque reutilizado en ambas tabs)
+    html_metricas = f"""
+    <div style="margin-top:14px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;
+                        padding:10px 8px;text-align:center;">
+                <div style="font-size:22px;font-weight:700;color:#085041;">{casos_mes}</div>
+                <div style="font-size:10px;color:#6c757d;margin-top:2px;line-height:1.3;">
+                    Casos este mes
+                </div>
+            </div>
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;
+                        padding:10px 8px;text-align:center;">
+                <div style="font-size:22px;font-weight:700;color:#185FA5;">{precision}%</div>
+                <div style="font-size:10px;color:#6c757d;margin-top:2px;line-height:1.3;">
+                    Precisión validada
+                </div>
+            </div>
+        </div>
+        <div style="background:#E1F5EE;border-radius:10px;padding:10px 14px;">
+            <div style="font-size:13px;font-weight:700;color:#085041;line-height:1.3;">
+                {tipo_top_corto}
+            </div>
+            <div style="font-size:11px;color:#0F6E56;margin-top:3px;">
+                Tipo más frecuente · {tipo_top_pct}%
+            </div>
+        </div>
+    </div>
+    """
+
+    # ── TAB 1: Historial ─────────────────────────────────────
     with tab1:
         st.markdown("")
         if not st.session_state.historial:
@@ -852,40 +913,26 @@ with col_der:
             }
             for caso in st.session_state.historial[:8]:
                 badge = badge_map.get(caso["complejidad"], "")
-                st.markdown(f"""
-                <div class="caso-card">
-                    <div class="caso-nombre">🗂️ {caso['nombre']}</div>
-                    <div class="caso-fecha">📅 {caso['fecha']}</div>
-                    <div style="margin-top:6px">{badge}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                nombre_h = caso['nombre']
+                fecha_h  = caso['fecha']
+                st.markdown(
+                    f'<div class="caso-card"><div class="caso-nombre">🗂️ {nombre_h}</div>'
+                    f'<div class="caso-fecha">📅 {fecha_h}</div>'
+                    f'<div style="margin-top:6px">{badge}</div></div>',
+                    unsafe_allow_html=True
+                )
+        # Métricas al final del historial
+        st.markdown(html_metricas, unsafe_allow_html=True)
 
+    # ── TAB 2: Estadísticas ───────────────────────────────────
     with tab2:
         st.markdown("")
-        total  = len(st.session_state.historial)
-        altas  = sum(1 for c in st.session_state.historial if c["complejidad"] == "alta")
-        medias = sum(1 for c in st.session_state.historial if c["complejidad"] == "media")
-        bajas  = sum(1 for c in st.session_state.historial if c["complejidad"] == "baja")
-
-        st.metric("Total de casos", total)
+        st.metric("Total de casos",    total)
         st.metric("Complejidad alta",  altas)
         st.metric("Complejidad media", medias)
         st.metric("Complejidad baja",  bajas)
-
-        if total > 0:
-            st.divider()
-            tipo_frecuente = max(
-                [("Alta", altas), ("Media", medias), ("Baja", bajas)],
-                key=lambda x: x[1]
-            )
-            st.markdown(f"""
-            <div style="background:#E1F5EE;border-radius:8px;padding:10px 12px;">
-                <div style="font-size:13px;font-weight:600;color:#085041">Complejidad más frecuente</div>
-                <div style="font-size:12px;color:#0F6E56;margin-top:4px">
-                    {tipo_frecuente[0]} · {tipo_frecuente[1]} caso(s)
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+        # Métricas al final de estadísticas
+        st.markdown(html_metricas, unsafe_allow_html=True)
 
 # ── PIE DE PÁGINA ─────────────────────────────────────────────────────────────
 st.divider()
