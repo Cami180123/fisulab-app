@@ -745,7 +745,6 @@ with col_centro:
                             📅 {paso['edad']}
                         </div>
                         {cantidad_html}
-                        <!-- Para qué sirve -->
                         <div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">
                             🎯 {paso['objetivo']}
                         </div>
