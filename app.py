@@ -242,6 +242,9 @@ No omitas este bloque bajo ninguna circunstancia.
     {"edad": "<rango de edad>", "procedimiento": "<nombre>", "objetivo": "<descripción breve>"},
     {"edad": "<rango de edad>", "procedimiento": "<nombre>", "objetivo": "<descripción breve>"}
   ]
+  "<descripción breve>"},
+    {"edad": "<rango de edad>", "procedimiento": "<nombre>", "objetivo": "<descripción breve>"}
+  ]
 }
 ```
 """
@@ -627,7 +630,7 @@ with col_centro:
         color_map  = {"MUY ALTA": "#A32D2D", "MEDIA": "#854F0B", "BAJA": "#3B6D11"}
         color_comp = color_map.get(complejidad, "#3B6D11")
 
-        st.markdown("## 📌 Resumen clínico IA")
+        st.markdown("📌 Resumen clínico IA")
 
         c1, c2, c3 = st.columns(3)
 
@@ -670,7 +673,7 @@ with col_centro:
         st.divider()
 
         # ── Clasificación diferencial — dinámica, ordenada de mayor a menor ──
-        st.markdown("## 🔬 Clasificación diferencial")
+        st.markdown("🔬 Clasificación diferencial")
 
         if diferenciales:
             # Ordena de mayor a menor probabilidad
@@ -704,7 +707,7 @@ with col_centro:
         st.divider()
 
         # ── Cronograma orientativo — dinámico ─────────────────────────
-        st.markdown("## 🗓️ Cronograma orientativo de tratamiento")
+        st.markdown("🗓️ Cronograma orientativo de tratamiento")
 
         if cronograma:
             # Colores alternos para los pasos del cronograma
@@ -753,7 +756,7 @@ with col_centro:
             st.caption("No se encontró cronograma en la respuesta.")
 
         # ── Equipo multidisciplinar recomendado ───────────────────────
-        st.markdown("## 👥 Equipo multidisciplinar recomendado")
+        st.markdown("👥 Equipo multidisciplinar recomendado")
 
         # Especialidades con sus colores distintivos
         equipos_config = {
