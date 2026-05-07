@@ -638,30 +638,6 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     ))
     return bytes(pdf.output())
         
-  
-    # ── CONTENIDO DEL DIAGNÓSTICO ─────────────────────────────────
-    pdf.set_font("Arial", size=10)
-    pdf.set_text_color(30, 30, 30)
-    texto_limpio = resultado_texto.encode("latin-1", errors="replace").decode("latin-1")
-    pdf.multi_cell(0, 6, texto_limpio)
-    pdf.ln(8)
-
-    # ── PIE DE PÁGINA ─────────────────────────────────────────────
-    pdf.set_y(-20)
-    pdf.set_draw_color(74, 140, 40)
-    pdf.set_line_width(0.5)
-    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
-    pdf.ln(3)
-    pdf.set_font("Arial", "I", 8)
-    pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 5,
-             f"FISULAB · IA PARA APOYO DIAGNOSTICO CLINICO · "
-             f"Generado el {time.strftime('%d/%m/%Y')} · Pagina {pdf.page_no()}",
-             align="C")
-
-    return bytes(pdf.output())
-
-
 # ── FUNCIÓN LOGO ──────────────────────────────────────────────────────────────
 def get_logo_base64(path="fisulab.png"):
     """Convierte el logo a texto base64 para usarlo en HTML inline."""
@@ -669,6 +645,28 @@ def get_logo_base64(path="fisulab.png"):
         with open(path, "rb") as f:
             return base64.b64encode(f.read()).decode()
     return None
+ 
+ 
+# ── PERSISTENCIA: archivo JSON local ─────────────────────────────────────────
+HISTORIAL_PATH = "fisulab_historial.json"
+ 
+def cargar_historial():
+    """Lee el historial desde disco. Si no existe, retorna lista vacía."""
+    if os.path.exists(HISTORIAL_PATH):
+        try:
+            with open(HISTORIAL_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+ 
+def guardar_historial(historial):
+    """Escribe el historial completo en disco."""
+    try:
+        with open(HISTORIAL_PATH, "w", encoding="utf-8") as f:
+            json.dump(historial, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        st.warning(f"No se pudo guardar el historial: {e}")
 
 
 # ── ESTADO DE SESIÓN ─────────────────────────────────────────────────────────
