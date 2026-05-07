@@ -631,212 +631,212 @@ with col_centro:
         # Contenedor scrollable — todo el informe va dentro
         with st.container(height=560, border=False):
      
-        st.markdown("📌 Resumen clínico IA")
-
-        c1, c2, c3 = st.columns(3)
-
-        with c1:
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-label">Clasificación probable</div>
-                <div class="metric-value" style="font-size:15px; line-height:1.3">{clasificacion}</div>
-                <div class="metric-label">{sistema}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        with c2:
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-label">Complejidad estimada</div>
-                <div class="metric-value" style="color:{color_comp}">
-                    {complejidad}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        with c3:
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-label">Confianza del modelo</div>
-                <div style="width:100%;height:8px;background:#e9ecef;border-radius:6px;margin:6px 0;">
-                    <div style="width:{confianza_modelo}%;
-                                height:8px;background:#1d7af3;border-radius:6px;"></div>
-                </div>
-                <div style="font-weight:700;color:#1d7af3">
-                    {confianza_modelo} %
-                </div>
-                <div class="metric-label">
-                    Resultado orientativo · Validación clínica requerida
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.divider()
-
-        # ── Clasificación diferencial — dinámica, ordenada de mayor a menor ──
-        st.markdown("🔬 Clasificación diferencial")
-
-        if diferenciales:
-            # Ordena de mayor a menor probabilidad
-            diferenciales_ordenados = sorted(diferenciales, key=lambda x: x["probabilidad"], reverse=True)
-            for d in diferenciales_ordenados:
-                nombre    = d["nombre"]
-                prob      = d["probabilidad"]
-                pct_float = max(0.0, min(1.0, prob / 100))
-                # Color de la barra según posición: principal=teal, resto=gris
-                if d == diferenciales_ordenados[0]:
-                    color_barra = "#0F6E56"
-                elif d == diferenciales_ordenados[1] if len(diferenciales_ordenados) > 1 else False:
-                    color_barra = "#6c757d"
-                else:
-                    color_barra = "#ced4da"
+            st.markdown("📌 Resumen clínico IA")
+    
+            c1, c2, c3 = st.columns(3)
+    
+            with c1:
                 st.markdown(f"""
-                <div style="margin-bottom:10px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <span style="font-size:13px;font-weight:600;color:#212529">{nombre}</span>
-                        <span style="font-size:13px;font-weight:700;color:{color_barra}">{prob}%</span>
-                    </div>
-                    <div style="width:100%;height:8px;background:#e9ecef;border-radius:6px;overflow:hidden;">
-                        <div style="width:{prob}%;height:8px;background:{color_barra};border-radius:6px;
-                                    transition:width 0.4s ease;"></div>
+                <div class="metric-card">
+                    <div class="metric-label">Clasificación probable</div>
+                    <div class="metric-value" style="font-size:15px; line-height:1.3">{clasificacion}</div>
+                    <div class="metric-label">{sistema}</div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+            with c2:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-label">Complejidad estimada</div>
+                    <div class="metric-value" style="color:{color_comp}">
+                        {complejidad}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-        else:
-            st.caption("No se encontraron diagnósticos diferenciales en la respuesta.")
-
-        st.divider()
-
-        # ── Cronograma orientativo — dinámico ─────────────────────────
-        st.markdown("🗓️ Cronograma orientativo de tratamiento")
-
-        if cronograma:
-            # Colores alternos para los pasos del cronograma
-            colores_tl = ["#0F6E56", "#534AB7", "#854F0B", "#185FA5", "#993C1D", "#3B6D11"]
-            for i, paso in enumerate(cronograma):
-                color = colores_tl[i % len(colores_tl)]
-                # Intentar extraer cantidad de intervenciones del campo objetivo o procedimiento
-                # El JSON base no tiene ese campo, así que lo inferimos del texto si está presente
-                cantidad_texto = paso.get("cantidad", "")
-                if cantidad_texto:
-                    cantidad_html = f'<span style="display:inline-block;background:#f1f3f5;color:#495057;font-size:11px;padding:2px 8px;border-radius:12px;margin-top:4px;">🔢 {cantidad_texto} intervenciones estimadas</span>'
-                else:
-                    cantidad_html = ""
-
-                # Construir HTML del paso como string Python — sin f-string anidado para el objetivo
-                num_circulo = f'<div style="min-width:28px;height:28px;border-radius:50%;background:{color}20;border:1.5px solid {color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{color};flex-shrink:0;margin-top:2px;">{i+1}</div>'
-                titulo      = f'<div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">{paso["procedimiento"]}</div>'
-                edad_div    = f'<div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">📅 {paso["edad"]}</div>'
-                objetivo_div= f'<div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">🎯 {paso["objetivo"]}</div>'
-                contenido   = f'<div style="border-left:3px solid {color};padding-left:12px;flex:1;">{titulo}{edad_div}{cantidad_html}{objetivo_div}</div>'
-                html_paso   = f'<div style="display:flex;gap:14px;margin-bottom:14px;">{num_circulo}{contenido}</div>'
-                st.markdown(html_paso, unsafe_allow_html=True)
-        else:
-            st.caption("No se encontró cronograma en la respuesta.")
-        
-        # ── Equipo multidisciplinar recomendado ───────────────────────
-        st.markdown("👥 Equipo multidisciplinar recomendado")
-
-        # Especialidades con sus colores distintivos
-        equipos_config = {
-            "Cirugía plástica":        {"bg": "#E1F5EE", "color": "#085041",  "border": "#9FE1CB", "icon": "🔪"},
-            "Fonoaudiología":           {"bg": "#EEEDFE", "color": "#534AB7",  "border": "#CECBF6", "icon": "🗣️"},
-            "Ortodoncia":               {"bg": "#E6F1FB", "color": "#185FA5",  "border": "#B5D4F4", "icon": "🦷"},
-            "Psicología":               {"bg": "#FAEEDA", "color": "#854F0B",  "border": "#FAC775", "icon": "🧠"},
-            "Ortopedia facial":         {"bg": "#FAECE7", "color": "#993C1D",  "border": "#F5C4B3", "icon": "🦴"},
-            "Genética clínica":         {"bg": "#EAF3DE", "color": "#3B6D11",  "border": "#C0DD97", "icon": "🧬"},
-            "Nutrición":                {"bg": "#FFF8E1", "color": "#854F0B",  "border": "#FFE082", "icon": "🥗"},
-            "Otorrinolaringología":     {"bg": "#FCE4EC", "color": "#880E4F",  "border": "#F48FB1", "icon": "👂"},
-            "Trabajo social":           {"bg": "#E8F5E9", "color": "#2E7D32",  "border": "#A5D6A7", "icon": "🤝"},
-            "Anestesiología":           {"bg": "#E3F2FD", "color": "#1565C0",  "border": "#90CAF9", "icon": "💉"},
-        }
-
-        # Detectar qué especialidades menciona el resultado de la IA
-        texto_upper = resultado_texto.upper()
-        equipos_detectados = []
-        for especialidad, cfg in equipos_config.items():
-            # Buscar variantes de la palabra en el texto
-            palabras_clave = especialidad.upper().split()
-            if any(p in texto_upper for p in palabras_clave):
-                equipos_detectados.append((especialidad, cfg))
-
-        # Si no se detectó ninguna, mostrar las básicas por defecto
-        if not equipos_detectados:
-            equipos_detectados = [
-                ("Cirugía plástica",  equipos_config["Cirugía plástica"]),
-                ("Fonoaudiología",    equipos_config["Fonoaudiología"]),
-                ("Ortodoncia",        equipos_config["Ortodoncia"]),
-                ("Psicología",        equipos_config["Psicología"]),
-            ]
-
-        # Renderizar chips de color en filas
-        chips_html = "".join([
-            f"""<span style="
-                display:inline-flex;align-items:center;gap:5px;
-                background:{cfg['bg']};color:{cfg['color']};
-                border:1px solid {cfg['border']};
-                padding:6px 14px;border-radius:20px;
-                font-size:12px;font-weight:500;
-                margin:4px 4px 4px 0;">
-                {cfg['icon']} {esp}
-            </span>"""
-            for esp, cfg in equipos_detectados
-        ])
-        st.markdown(f"""
-        <div style="display:flex;flex-wrap:wrap;gap:2px;padding:8px 0;">
-            {chips_html}
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.divider()
-        
-        st.markdown("### 📄 Informe completo")
-        with st.container(height=400):
-            st.markdown(resultado_texto)
-
-        # PDF con todos los datos dinámicos incluyendo cronograma
-        pdf_bytes = generar_pdf(
-            paciente_id or "Caso IA",
-            paciente_edad or "No especificada",
-            paciente_sexo,
-            resultado_texto,
-            clasificacion,
-            complejidad,
-            confianza_modelo,
-            cronograma,
-        )
-
-        st.divider ()
-        # Botones de acción
-        b1, b2, b3 = st.columns(3)
-        
-        with b1:
-            st.download_button(
-            "📄 Exportar PDF clínico",
-            data=pdf_bytes,
-            file_name=f"fisulab_{time.strftime('%Y%m%d')}.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
-
-        with b2:
-            if st.button("🔄 Nuevo análisis", use_container_width=True):
-                st.session_state.resultado = None
-                st.rerun()
-        with b3:
-            st.button("💾 Guardar en sistema", use_container_width=True, disabled=True,
-                      help="Función de integración con base de datos — próximamente") 
-
-      # ── Disclaimer ético ─────────────────────────
-        st.markdown("""
-        <div class="disclaimer">
-            <strong>⚠️ Aviso importante:</strong>
-            Este análisis es una orientación basada en imagénes.
-            No constituye un diagnóstico médico definitivo. La clasificación y el plan de tratamiento deben ser validados 
-            por el equipo clínico multidisciplinar de FISULAB mediante evaluacion presencial completa.
-            El modelo puede tener sesgos según la calidad, ángulo e iluminación de la imagen
-        </div>
-        """, unsafe_allow_html=True)
+    
+            with c3:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-label">Confianza del modelo</div>
+                    <div style="width:100%;height:8px;background:#e9ecef;border-radius:6px;margin:6px 0;">
+                        <div style="width:{confianza_modelo}%;
+                                    height:8px;background:#1d7af3;border-radius:6px;"></div>
+                    </div>
+                    <div style="font-weight:700;color:#1d7af3">
+                        {confianza_modelo} %
+                    </div>
+                    <div class="metric-label">
+                        Resultado orientativo · Validación clínica requerida
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+            st.divider()
+    
+            # ── Clasificación diferencial — dinámica, ordenada de mayor a menor ──
+            st.markdown("🔬 Clasificación diferencial")
+    
+            if diferenciales:
+                # Ordena de mayor a menor probabilidad
+                diferenciales_ordenados = sorted(diferenciales, key=lambda x: x["probabilidad"], reverse=True)
+                for d in diferenciales_ordenados:
+                    nombre    = d["nombre"]
+                    prob      = d["probabilidad"]
+                    pct_float = max(0.0, min(1.0, prob / 100))
+                    # Color de la barra según posición: principal=teal, resto=gris
+                    if d == diferenciales_ordenados[0]:
+                        color_barra = "#0F6E56"
+                    elif d == diferenciales_ordenados[1] if len(diferenciales_ordenados) > 1 else False:
+                        color_barra = "#6c757d"
+                    else:
+                        color_barra = "#ced4da"
+                    st.markdown(f"""
+                    <div style="margin-bottom:10px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                            <span style="font-size:13px;font-weight:600;color:#212529">{nombre}</span>
+                            <span style="font-size:13px;font-weight:700;color:{color_barra}">{prob}%</span>
+                        </div>
+                        <div style="width:100%;height:8px;background:#e9ecef;border-radius:6px;overflow:hidden;">
+                            <div style="width:{prob}%;height:8px;background:{color_barra};border-radius:6px;
+                                        transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.caption("No se encontraron diagnósticos diferenciales en la respuesta.")
+    
+            st.divider()
+    
+            # ── Cronograma orientativo — dinámico ─────────────────────────
+            st.markdown("🗓️ Cronograma orientativo de tratamiento")
+    
+            if cronograma:
+                # Colores alternos para los pasos del cronograma
+                colores_tl = ["#0F6E56", "#534AB7", "#854F0B", "#185FA5", "#993C1D", "#3B6D11"]
+                for i, paso in enumerate(cronograma):
+                    color = colores_tl[i % len(colores_tl)]
+                    # Intentar extraer cantidad de intervenciones del campo objetivo o procedimiento
+                    # El JSON base no tiene ese campo, así que lo inferimos del texto si está presente
+                    cantidad_texto = paso.get("cantidad", "")
+                    if cantidad_texto:
+                        cantidad_html = f'<span style="display:inline-block;background:#f1f3f5;color:#495057;font-size:11px;padding:2px 8px;border-radius:12px;margin-top:4px;">🔢 {cantidad_texto} intervenciones estimadas</span>'
+                    else:
+                        cantidad_html = ""
+    
+                    # Construir HTML del paso como string Python — sin f-string anidado para el objetivo
+                    num_circulo = f'<div style="min-width:28px;height:28px;border-radius:50%;background:{color}20;border:1.5px solid {color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{color};flex-shrink:0;margin-top:2px;">{i+1}</div>'
+                    titulo      = f'<div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">{paso["procedimiento"]}</div>'
+                    edad_div    = f'<div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">📅 {paso["edad"]}</div>'
+                    objetivo_div= f'<div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">🎯 {paso["objetivo"]}</div>'
+                    contenido   = f'<div style="border-left:3px solid {color};padding-left:12px;flex:1;">{titulo}{edad_div}{cantidad_html}{objetivo_div}</div>'
+                    html_paso   = f'<div style="display:flex;gap:14px;margin-bottom:14px;">{num_circulo}{contenido}</div>'
+                    st.markdown(html_paso, unsafe_allow_html=True)
+            else:
+                st.caption("No se encontró cronograma en la respuesta.")
+            
+            # ── Equipo multidisciplinar recomendado ───────────────────────
+            st.markdown("👥 Equipo multidisciplinar recomendado")
+    
+            # Especialidades con sus colores distintivos
+            equipos_config = {
+                "Cirugía plástica":        {"bg": "#E1F5EE", "color": "#085041",  "border": "#9FE1CB", "icon": "🔪"},
+                "Fonoaudiología":           {"bg": "#EEEDFE", "color": "#534AB7",  "border": "#CECBF6", "icon": "🗣️"},
+                "Ortodoncia":               {"bg": "#E6F1FB", "color": "#185FA5",  "border": "#B5D4F4", "icon": "🦷"},
+                "Psicología":               {"bg": "#FAEEDA", "color": "#854F0B",  "border": "#FAC775", "icon": "🧠"},
+                "Ortopedia facial":         {"bg": "#FAECE7", "color": "#993C1D",  "border": "#F5C4B3", "icon": "🦴"},
+                "Genética clínica":         {"bg": "#EAF3DE", "color": "#3B6D11",  "border": "#C0DD97", "icon": "🧬"},
+                "Nutrición":                {"bg": "#FFF8E1", "color": "#854F0B",  "border": "#FFE082", "icon": "🥗"},
+                "Otorrinolaringología":     {"bg": "#FCE4EC", "color": "#880E4F",  "border": "#F48FB1", "icon": "👂"},
+                "Trabajo social":           {"bg": "#E8F5E9", "color": "#2E7D32",  "border": "#A5D6A7", "icon": "🤝"},
+                "Anestesiología":           {"bg": "#E3F2FD", "color": "#1565C0",  "border": "#90CAF9", "icon": "💉"},
+            }
+    
+            # Detectar qué especialidades menciona el resultado de la IA
+            texto_upper = resultado_texto.upper()
+            equipos_detectados = []
+            for especialidad, cfg in equipos_config.items():
+                # Buscar variantes de la palabra en el texto
+                palabras_clave = especialidad.upper().split()
+                if any(p in texto_upper for p in palabras_clave):
+                    equipos_detectados.append((especialidad, cfg))
+    
+            # Si no se detectó ninguna, mostrar las básicas por defecto
+            if not equipos_detectados:
+                equipos_detectados = [
+                    ("Cirugía plástica",  equipos_config["Cirugía plástica"]),
+                    ("Fonoaudiología",    equipos_config["Fonoaudiología"]),
+                    ("Ortodoncia",        equipos_config["Ortodoncia"]),
+                    ("Psicología",        equipos_config["Psicología"]),
+                ]
+    
+            # Renderizar chips de color en filas
+            chips_html = "".join([
+                f"""<span style="
+                    display:inline-flex;align-items:center;gap:5px;
+                    background:{cfg['bg']};color:{cfg['color']};
+                    border:1px solid {cfg['border']};
+                    padding:6px 14px;border-radius:20px;
+                    font-size:12px;font-weight:500;
+                    margin:4px 4px 4px 0;">
+                    {cfg['icon']} {esp}
+                </span>"""
+                for esp, cfg in equipos_detectados
+            ])
+            st.markdown(f"""
+            <div style="display:flex;flex-wrap:wrap;gap:2px;padding:8px 0;">
+                {chips_html}
+            </div>
+            """, unsafe_allow_html=True)
+    
+            st.divider()
+            
+            st.markdown("### 📄 Informe completo")
+            with st.container(height=400):
+                st.markdown(resultado_texto)
+    
+            # PDF con todos los datos dinámicos incluyendo cronograma
+            pdf_bytes = generar_pdf(
+                paciente_id or "Caso IA",
+                paciente_edad or "No especificada",
+                paciente_sexo,
+                resultado_texto,
+                clasificacion,
+                complejidad,
+                confianza_modelo,
+                cronograma,
+            )
+    
+            st.divider ()
+            # Botones de acción
+            b1, b2, b3 = st.columns(3)
+            
+            with b1:
+                st.download_button(
+                "📄 Exportar PDF clínico",
+                data=pdf_bytes,
+                file_name=f"fisulab_{time.strftime('%Y%m%d')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
+    
+            with b2:
+                if st.button("🔄 Nuevo análisis", use_container_width=True):
+                    st.session_state.resultado = None
+                    st.rerun()
+            with b3:
+                st.button("💾 Guardar en sistema", use_container_width=True, disabled=True,
+                          help="Función de integración con base de datos — próximamente") 
+    
+          # ── Disclaimer ético ─────────────────────────
+            st.markdown("""
+            <div class="disclaimer">
+                <strong>⚠️ Aviso importante:</strong>
+                Este análisis es una orientación basada en imagénes.
+                No constituye un diagnóstico médico definitivo. La clasificación y el plan de tratamiento deben ser validados 
+                por el equipo clínico multidisciplinar de FISULAB mediante evaluacion presencial completa.
+                El modelo puede tener sesgos según la calidad, ángulo e iluminación de la imagen
+            </div>
+            """, unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
 # COLUMNA DERECHA — Historial y estadísticas
