@@ -182,7 +182,7 @@ Describe lo que OBSERVAS objetivamente en la imagen:
 - Simetría nasal y deformidad asociada
 - Calidad y limitaciones de la imagen
 
-## 1. CLASIFICACIÓN CLÍNICA PROBABLE
+**1. CLASIFICACIÓN CLÍNICA PROBABLE**
 Identifica cuál categoría corresponde:
 - Labio Normal (sin hendidura)
 - Labio Leporino (LL) Unilateral Incompleto
@@ -191,31 +191,31 @@ Identifica cuál categoría corresponde:
 - Labio y Paladar Hendido
 - No determinable (imagen insuficiente)
 
-## 2. CARACTERÍSTICAS CLÍNICAS OBSERVADAS
+**2. CARACTERÍSTICAS CLÍNICAS OBSERVADAS**
 Hallazgos visuales que justifican la clasificación.
 
-## 3. PRESUNTO DIAGNÓSTICO
+**3. PRESUNTO DIAGNÓSTICO**
 Nombre técnico según clasificación de Veau o Kernahan.
 
-## 4. PLAN DE TRATAMIENTO ORIENTATIVO
+**4. PLAN DE TRATAMIENTO ORIENTATIVO**
 Tabla con:
 | Procedimiento | Número estimado | Objetivo |
 
-## 5. CRONOGRAMA POR RANGO DE EDAD
+**5. CRONOGRAMA POR RANGO DE EDAD**
 Tabla con:
 | Intervención | Rango de edad | Justificación |
 
-## 6. NIVEL DE COMPLEJIDAD
+**6. NIVEL DE COMPLEJIDAD**
 - Menos de 2 intervenciones: BAJA
 - Entre 3 y 5 intervenciones: MEDIA
 - Más de 5 intervenciones: MUY ALTA
 
 Justifica brevemente considerando extensión, compromiso alveolar/nasal, necesidad de ortodoncia, riesgos funcionales.
 
-## 7. CONSIDERACIONES ADICIONALES
+**7. CONSIDERACIONES ADICIONALES**
 Especialidades requeridas: ortopedia prequirúrgica, fonoaudiología, ortodoncia, psicología, etc.
 
-## 8. DATOS FALTANTES Y ADVERTENCIAS
+**8. DATOS FALTANTES Y ADVERTENCIAS**
 Señala qué información faltante podría cambiar el pronóstico.
 
 ---
