@@ -847,7 +847,7 @@ with col_centro:
         # Contenedor scrollable — todo el informe va dentro
         with st.container(height=560, border=False):
      
-            st.markdown("📌 Resumen clínico IA")
+            st.markdown("**📌 Resumen clínico IA**")
     
             c1, c2, c3 = st.columns(3)
     
@@ -890,7 +890,7 @@ with col_centro:
             st.divider()
     
             # ── Clasificación diferencial — dinámica, ordenada de mayor a menor ──
-            st.markdown("🔬 Clasificación diferencial")
+            st.markdown("**🔬 Clasificación diferencial**")
     
             if diferenciales:
                 # Ordena de mayor a menor probabilidad
@@ -924,7 +924,7 @@ with col_centro:
             st.divider()
     
             # ── Cronograma orientativo — dinámico ─────────────────────────
-            st.markdown("🗓️ Cronograma orientativo de tratamiento")
+            st.markdown("**🗓️ Cronograma orientativo de tratamiento**")
     
             if cronograma:
                 # Colores alternos para los pasos del cronograma
@@ -951,7 +951,7 @@ with col_centro:
                 st.caption("No se encontró cronograma en la respuesta.")
             
             # ── Equipo multidisciplinar recomendado ───────────────────────
-            st.markdown("👥 Equipo multidisciplinar recomendado")
+            st.markdown("**👥 Equipo multidisciplinar recomendado**")
     
             # Especialidades con sus colores distintivos
             equipos_config = {
@@ -1007,27 +1007,28 @@ with col_centro:
             st.divider()
             
             st.markdown("### 📄 Informe completo")
-            with st.container(height=400):
-                st.markdown(resultado_texto)
+            st.markdown(resultado_texto)
+
+        # ── Fuera del scroll: PDF, botones y disclaimer ───────────
+   
+        # PDF con todos los datos dinámicos incluyendo cronograma
+        pdf_bytes = generar_pdf(
+            paciente_id or "Caso IA",
+            paciente_edad or "No especificada",
+            paciente_sexo,
+            resultado_texto,
+            clasificacion,
+            complejidad,
+            confianza_modelo,
+            cronograma,
+        )
     
-            # PDF con todos los datos dinámicos incluyendo cronograma
-            pdf_bytes = generar_pdf(
-                paciente_id or "Caso IA",
-                paciente_edad or "No especificada",
-                paciente_sexo,
-                resultado_texto,
-                clasificacion,
-                complejidad,
-                confianza_modelo,
-                cronograma,
-            )
-    
-            st.divider ()
-            # Botones de acción
-            b1, b2, b3 = st.columns(3)
+        st.divider ()
+        # Botones de acción
+        b1, b2, b3 = st.columns(3)
             
-            with b1:
-                st.download_button(
+        with b1:
+            st.download_button(
                 "📄 Exportar PDF clínico",
                 data=pdf_bytes,
                 file_name=f"fisulab_{time.strftime('%Y%m%d')}.pdf",
@@ -1035,24 +1036,25 @@ with col_centro:
                 use_container_width=True
             )
     
-            with b2:
-                if st.button("🔄 Nuevo análisis", use_container_width=True):
-                    st.session_state.resultado = None
-                    st.rerun()
-            with b3:
-                st.button("💾 Guardar en sistema", use_container_width=True, disabled=True,
-                          help="Función de integración con base de datos — próximamente") 
+        with b2:
+            if st.button("🔄 Nuevo análisis", use_container_width=True):
+                st.session_state.resultado = None
+                st.rerun()
+        with b3:
+            st.button("💾 Guardar en sistema", use_container_width=True, disabled=True,
+                        help="Función de integración con base de datos — próximamente") 
     
-          # ── Disclaimer ético ─────────────────────────
-            st.markdown("""
-            <div class="disclaimer">
-                <strong>⚠️ Aviso importante:</strong>
-                Este análisis es una orientación basada en imagénes.
-                No constituye un diagnóstico médico definitivo. La clasificación y el plan de tratamiento deben ser validados 
-                por el equipo clínico multidisciplinar de FISULAB mediante evaluacion presencial completa.
-                El modelo puede tener sesgos según la calidad, ángulo e iluminación de la imagen
-            </div>
-            """, unsafe_allow_html=True)
+        # ── Disclaimer ético ─────────────────────────
+        st.markdown("""
+        <div class="disclaimer">
+            <strong>⚠️ Aviso importante:</strong>
+            Este análisis es una orientación de apoyo generada por Inteligencia Artificial, basada exclusivamente
+            en el ánalisis de imágenes fotográficas. No constituye un diagnóstico medico definitivo. La clasificación y el plan de tratamiento deben ser validados
+            mediante evaluación clínica presencial completa por el equipo clínico multidisciplinar de FISULAB. El modelo puede presentar limitaciones según
+            la calidad, ángulo e iluminación de la imagen proporcionada.
+            
+        </div>
+        """, unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
 # COLUMNA DERECHA — Historial y estadísticas
