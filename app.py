@@ -616,6 +616,7 @@ with col_centro:
         resultado_texto = st.session_state.resultado
         datos_ia        = st.session_state.datos_ia
 
+        # ── Extraer datos antes de abrir el contenedor scrollable ────
         # ── Datos dinámicos del JSON parseado ───────────────────────
         clasificacion    = datos_ia.get("clasificacion_principal", "No determinada")
         sistema          = datos_ia.get("sistema", "—")
@@ -627,6 +628,9 @@ with col_centro:
         color_map  = {"MUY ALTA": "#A32D2D", "MEDIA": "#854F0B", "BAJA": "#3B6D11"}
         color_comp = color_map.get(complejidad, "#3B6D11")
 
+        # Contenedor scrollable — todo el informe va dentro
+        with st.container(height=560, border=False):
+     
         st.markdown("📌 Resumen clínico IA")
 
         c1, c2, c3 = st.columns(3)
