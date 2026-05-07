@@ -244,7 +244,6 @@ No omitas este bloque bajo ninguna circunstancia.
   ]
 }
 ```
-"""
 
 # ── FUNCIÓN: parsear JSON estructurado de la respuesta de Gemini ─────────────
 def parsear_json_ia(texto):
