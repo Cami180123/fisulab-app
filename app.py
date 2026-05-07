@@ -361,7 +361,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
 
     # ── PÁGINA 1 — PORTADA RESUMEN ───────────────────────────────
     # ── ENCABEZADO CON LOGO/NOMBRE DE LA INSTITUCIÓN ──────────────────────────────────────
-     logo_path = "fisulab.png"
+    logo_path = "fisulab.png"
     if os.path.exists(logo_path):
         pdf.image(logo_path, x=15, y=10, w=26)
         pdf.set_xy(46, 12)
@@ -481,7 +481,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.set_y(by + bh + 6)
     
     # ── CRONOGRAMA DINÁMICO ───────────────────────────────────────
-   if cronograma:
+    if cronograma:
         pdf.set_font("Arial", "B", 11)
         pdf.set_text_color(*VERDE_OSC)
         pdf.cell(0, 7, limpiar("2.  Plan de Tratamiento Orientativo"), ln=True)
