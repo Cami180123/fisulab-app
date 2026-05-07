@@ -174,7 +174,7 @@ Paciente pediátrico o adulto (si la edad no se proporciona, indícalo como "eda
 Evaluación basada únicamente en imágenes; no hay historia clínica completa.
 La información generada es para orientación y debe ser validada por un equipo médico multidisciplinar.
 
-## ANÁLISIS INICIAL
+**ANÁLISIS INICIAL**
 Describe lo que OBSERVAS objetivamente en la imagen:
 - Continuidad del labio superior (unilateral/bilateral, completo/incompleto)
 - Afectación del reborde alveolar
