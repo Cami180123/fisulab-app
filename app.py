@@ -369,27 +369,27 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
         pdf.image(logo_path, x=15, y=10, w=26)
 
     # ── NOMBRE DE LA INSTITUCIÓN ─────────────────────────────────
-    pdf.set_xy(46, 12)
-    else:
-        pdf.set_fill_color(15, 110, 86)
-        pdf.rect(15, 10, 26, 26, "F")
-        pdf.set_xy(18, 19)
-        pdf.set_font("Arial", "B", 14)
-        pdf.set_text_color(255, 255, 255)
-        pdf.cell(20, 8, "F", align="C")
         pdf.set_xy(46, 12)
-
-    pdf.set_font("Arial", "B", 17)
-    pdf.set_text_color(*VERDE)
-    pdf.cell(0, 8, "FISULAB", ln=True)
-    pdf.set_xy(46, 21)
-    pdf.set_font("Arial", size=9)
-    pdf.set_text_color(*GRIS_MED)
-    pdf.cell(0, 5, limpiar("Fundación de Atención Integral para Labio y Paladar Hendido"), ln=True)
-    pdf.set_xy(46, 28)
-    pdf.set_font("Arial", "I", 8)
-    pdf.set_text_color(*GRIS_MED)
-    pdf.cell(0, 5, "Sistema de apoyo diagnostico con Inteligencia Artificial", ln=True)
+        else:
+            pdf.set_fill_color(15, 110, 86)
+            pdf.rect(15, 10, 26, 26, "F")
+            pdf.set_xy(18, 19)
+            pdf.set_font("Arial", "B", 14)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(20, 8, "F", align="C")
+            pdf.set_xy(46, 12)
+    
+        pdf.set_font("Arial", "B", 17)
+        pdf.set_text_color(*VERDE)
+        pdf.cell(0, 8, "FISULAB", ln=True)
+        pdf.set_xy(46, 21)
+        pdf.set_font("Arial", size=9)
+        pdf.set_text_color(*GRIS_MED)
+        pdf.cell(0, 5, limpiar("Fundación de Atención Integral para Labio y Paladar Hendido"), ln=True)
+        pdf.set_xy(46, 28)
+        pdf.set_font("Arial", "I", 8)
+        pdf.set_text_color(*GRIS_MED)
+        pdf.cell(0, 5, "Sistema de apoyo diagnostico con Inteligencia Artificial", ln=True)
 
     # ── LÍNEA SEPARADORA VERDE ────────────────────────────────────
     pdf.set_y(40)
