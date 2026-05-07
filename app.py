@@ -219,8 +219,8 @@ Especialidades requeridas: ortopedia prequirúrgica, fonoaudiología, ortodoncia
 Señala qué información faltante podría cambiar el pronóstico.
 
 ---
-IMPORTANTE: Este análisis es una guía de apoyo para el médico tratante. No constituye un
-diagnóstico médico definitivo. Es fundamental una evaluación clínica completa y multidisciplinar de FISULAB mediante evaluación presencial completa.
+# ── IMPORTANTE: Este análisis es una guía de apoyo para el médico tratante. No constituye un
+# ── diagnóstico médico definitivo. Es fundamental una evaluación clínica completa y multidisciplinar de FISULAB mediante evaluación presencial completa.
 
 ---
 # BLOQUE ESTRUCTURADO (OBLIGATORIO)
@@ -244,6 +244,7 @@ No omitas este bloque bajo ninguna circunstancia.
   ]
 }
 ```
+"""
 
 # ── FUNCIÓN: parsear JSON estructurado de la respuesta de Gemini ─────────────
 def parsear_json_ia(texto):
@@ -305,7 +306,7 @@ class FisuPDF(FPDF):
         self.set_font("Arial", "I", 8)
         self.set_text_color(100, 100, 100)
         self.cell(0, 5,
-            f"FISULAB  ·  Informe de apoyo diagnostico clinico con IA  ·  "
+            f"FISULAB  ·  Orientación de apoyo diagnóstico clínico generado con IA  ·  "
             f"Generado el {time.strftime('%d/%m/%Y %H:%M')}  ·  Pagina {self.page_no()}",
             align="C")
 
@@ -924,30 +925,30 @@ with col_centro:
     
             # ── Cronograma orientativo — dinámico ─────────────────────────
             st.markdown("**🗓️ Cronograma orientativo de tratamiento**")
-    
-            if cronograma:
-                # Colores alternos para los pasos del cronograma
-                colores_tl = ["#0F6E56", "#534AB7", "#854F0B", "#185FA5", "#993C1D", "#3B6D11"]
-                for i, paso in enumerate(cronograma):
-                    color = colores_tl[i % len(colores_tl)]
-                    # Intentar extraer cantidad de intervenciones del campo objetivo o procedimiento
-                    # El JSON base no tiene ese campo, así que lo inferimos del texto si está presente
-                    cantidad_texto = paso.get("cantidad", "")
-                    if cantidad_texto:
-                        cantidad_html = f'<span style="display:inline-block;background:#f1f3f5;color:#495057;font-size:11px;padding:2px 8px;border-radius:12px;margin-top:4px;">🔢 {cantidad_texto} intervenciones estimadas</span>'
-                    else:
-                        cantidad_html = ""
-    
-                    # Construir HTML del paso como string Python — sin f-string anidado para el objetivo
-                    num_circulo = f'<div style="min-width:28px;height:28px;border-radius:50%;background:{color}20;border:1.5px solid {color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{color};flex-shrink:0;margin-top:2px;">{i+1}</div>'
-                    titulo      = f'<div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">{paso["procedimiento"]}</div>'
-                    edad_div    = f'<div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">📅 {paso["edad"]}</div>'
-                    objetivo_div= f'<div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">🎯 {paso["objetivo"]}</div>'
-                    contenido   = f'<div style="border-left:3px solid {color};padding-left:12px;flex:1;">{titulo}{edad_div}{cantidad_html}{objetivo_div}</div>'
-                    html_paso   = f'<div style="display:flex;gap:14px;margin-bottom:14px;">{num_circulo}{contenido}</div>'
-                    st.markdown(html_paso, unsafe_allow_html=True)
-            else:
-                st.caption("No se encontró cronograma en la respuesta.")
+            with st.container(height=320, border=False):
+                if cronograma:
+                    # Colores alternos para los pasos del cronograma
+                    colores_tl = ["#0F6E56", "#534AB7", "#854F0B", "#185FA5", "#993C1D", "#3B6D11"]
+                    for i, paso in enumerate(cronograma):
+                        color = colores_tl[i % len(colores_tl)]
+                        # Intentar extraer cantidad de intervenciones del campo objetivo o procedimiento
+                        # El JSON base no tiene ese campo, así que lo inferimos del texto si está presente
+                        cantidad_texto = paso.get("cantidad", "")
+                        if cantidad_texto:
+                            cantidad_html = f'<span style="display:inline-block;background:#f1f3f5;color:#495057;font-size:11px;padding:2px 8px;border-radius:12px;margin-top:4px;">🔢 {cantidad_texto} intervenciones estimadas</span>'
+                        else:
+                            cantidad_html = ""
+        
+                        # Construir HTML del paso como string Python — sin f-string anidado para el objetivo
+                        num_circulo = f'<div style="min-width:28px;height:28px;border-radius:50%;background:{color}20;border:1.5px solid {color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{color};flex-shrink:0;margin-top:2px;">{i+1}</div>'
+                        titulo      = f'<div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">{paso["procedimiento"]}</div>'
+                        edad_div    = f'<div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">📅 {paso["edad"]}</div>'
+                        objetivo_div= f'<div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">🎯 {paso["objetivo"]}</div>'
+                        contenido   = f'<div style="border-left:3px solid {color};padding-left:12px;flex:1;">{titulo}{edad_div}{cantidad_html}{objetivo_div}</div>'
+                        html_paso   = f'<div style="display:flex;gap:14px;margin-bottom:14px;">{num_circulo}{contenido}</div>'
+                        st.markdown(html_paso, unsafe_allow_html=True)
+                else:
+                    st.caption("No se encontró cronograma en la respuesta.")
             
             # ── Equipo multidisciplinar recomendado ───────────────────────
             st.markdown("**👥 Equipo multidisciplinar recomendado**")
@@ -1006,7 +1007,8 @@ with col_centro:
             st.divider()
             
             st.markdown("### 📄 Informe completo")
-            st.markdown(resultado_texto)
+            with st.container(height=400, border=False):
+                st.markdown(resultado_texto)
 
         # ── Fuera del scroll: PDF, botones y disclaimer ───────────
    
