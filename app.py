@@ -1210,7 +1210,7 @@ with col_der:
 st.divider()
 st.markdown("""
 <div style="text-align:center;color:#adb5bd;font-size:12px;padding:8px 0;">
-    FISULAB · IA Clínica · Proyecto académico — Especialización en Datos e IA · 2026<br>
-    <span style="color:#dc3545">Este sistema es experimental. No usar como único criterio diagnóstico.</span>
+    FISULAB · IA de apoyo clínico · Proyecto académico — Datos e Inteligencia Artifical (IA) · 2026<br>
+    <span style="color:#dc3545">Este sistema es experimental. No usar como único criterio dediagnóstico.</span>
 </div>
 """, unsafe_allow_html=True)
