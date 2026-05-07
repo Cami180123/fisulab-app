@@ -928,14 +928,63 @@ with col_der:
         # Métricas al final del historial
         st.markdown(html_metricas, unsafe_allow_html=True)
 
-    # ── TAB 2: Estadísticas ───────────────────────────────────
+  # ── TAB 2: Estadísticas ───────────────────────────────────
     with tab2:
-        st.markdown("")
-        st.metric("Total de casos",    total)
-        st.metric("Complejidad alta",  altas)
-        st.metric("Complejidad media", medias)
-        st.metric("Complejidad baja",  bajas)
-        # Métricas al final de estadísticas
+        if total == 0:
+            st.caption("Aún no hay casos analizados.")
+        else:
+            # ── Barras de complejidad con porcentajes reales ──────
+            def barra_stat(label, valor, total, color_bg, color_bar, color_txt):
+                pct = round((valor / total) * 100) if total > 0 else 0
+                return (
+                    f'<div style="margin-bottom:10px;">'
+                    f'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+                    f'<span style="font-size:12px;font-weight:600;color:#212529">{label}</span>'
+                    f'<span style="font-size:12px;font-weight:700;color:{color_txt}">{valor} caso(s) · {pct}%</span></div>'
+                    f'<div style="width:100%;height:7px;background:#e9ecef;border-radius:6px;overflow:hidden;">'
+                    f'<div style="width:{pct}%;height:7px;background:{color_bar};border-radius:6px;"></div></div>'
+                    f'</div>'
+                )
+
+            st.markdown(
+                f'<div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:12px 14px;margin-bottom:10px;">'
+                f'<div style="font-size:11px;color:#6c757d;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Total de casos analizados</div>'
+                f'<div style="font-size:28px;font-weight:700;color:#085041">{total}</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                barra_stat("Complejidad alta",  altas,  total, "#FCEBEB", "#A32D2D", "#A32D2D") +
+                barra_stat("Complejidad media", medias, total, "#FAEEDA", "#854F0B", "#854F0B") +
+                barra_stat("Complejidad baja",  bajas,  total, "#EAF3DE", "#3B6D11", "#3B6D11"),
+                unsafe_allow_html=True
+            )
+
+            # ── Distribución por tipo de fisura ──────────────────
+            if conteo_tipos:
+                st.markdown(
+                    '<div style="font-size:11px;color:#6c757d;margin:10px 0 6px;'
+                    'text-transform:uppercase;letter-spacing:0.5px;">Por tipo de fisura</div>',
+                    unsafe_allow_html=True
+                )
+                colores_tipo = ["#0F6E56", "#534AB7", "#854F0B", "#185FA5", "#993C1D"]
+                for i, (tipo, cnt) in enumerate(sorted(conteo_tipos.items(), key=lambda x: x[1], reverse=True)):
+                    pct_t  = round((cnt / total) * 100)
+                    color_t = colores_tipo[i % len(colores_tipo)]
+                    nombre_corto = tipo.replace("Labio Leporino", "LL").replace("Labio y Paladar Hendido", "LPH")
+                    st.markdown(
+                        f'<div style="margin-bottom:8px;">'
+                        f'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+                        f'<span style="font-size:11px;font-weight:600;color:#212529">{nombre_corto}</span>'
+                        f'<span style="font-size:11px;font-weight:700;color:{color_t}">{cnt} · {pct_t}%</span></div>'
+                        f'<div style="width:100%;height:6px;background:#e9ecef;border-radius:6px;overflow:hidden;">'
+                        f'<div style="width:{pct_t}%;height:6px;background:{color_t};border-radius:6px;"></div></div>'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
+
+        # Métricas casos este mes + precisión + tipo frecuente
         st.markdown(html_metricas, unsafe_allow_html=True)
 
 # ── PIE DE PÁGINA ─────────────────────────────────────────────────────────────
