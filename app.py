@@ -525,12 +525,12 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
             info_linea = f"Edad: {edad}"
             if cant:
                 info_linea += f"   |   Intervenciones estimadas: {cant}"
-            pdf.cell(0, 5, limpiar(info_linea), ln=True)
+            pdf.cell(169, 5, limpiar(info_linea), ln=True)
 
             pdf.set_x(26)
             pdf.set_font("Arial", "I", 9)
             pdf.set_text_color(*GRIS_OSC)
-            pdf.multi_cell(160, 5, limpiar(f"Objetivo: {obj}"))
+            pdf.multi_cell(169, 5, limpiar(f"Objetivo: {obj}"))
             pdf.ln(2)
 
     # ── Sección: Clasificación diferencial ────────────────────
@@ -598,23 +598,22 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
             pdf.set_font("Arial", "B", 10)
             pdf.set_text_color(*VERDE_OSC)
             pdf.set_fill_color(232, 245, 238)
-            pdf.cell(0, 7, limpiar(f"  {linea_strip}"), ln=True, fill=True)
+            pdf.cell(180, 7, limpiar(f"  {linea_strip}"), ln=True, fill=True)
             pdf.ln(1)
         else:
-            # Detectar sub-bullets (líneas con - al inicio)
             if linea_strip.startswith("- "):
-                pdf.set_x(20)
                 pdf.set_font("Arial", size=9)
                 pdf.set_text_color(*GRIS_OSC)
                 pdf.set_fill_color(15, 110, 86)
                 bul_y = pdf.get_y() + 3
                 pdf.rect(20, bul_y, 1.5, 1.5, "F")
                 pdf.set_x(23)
-                pdf.multi_cell(165, 5, limpiar(linea_strip[2:]))
+                pdf.multi_cell(172, 5, limpiar(linea_strip[2:]))
             else:
+                pdf.set_x(15)
                 pdf.set_font("Arial", size=9)
                 pdf.set_text_color(*GRIS_OSC)
-                pdf.multi_cell(0, 5, limpiar(linea_strip))
+                pdf.multi_cell(180, 5, limpiar(linea_strip))
 
     # ── AVISO LEGAL ───────────────────────────────────────────────
     pdf.ln(6)
