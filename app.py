@@ -295,6 +295,22 @@ def parsear_json_ia(texto):
     except Exception:
         return FALLBACK
 
+# ── CLASE PDF con pie de página automático/ PIE DE PÁGINA automático en todas las páginas───────────────────────────────────
+class FisuPDF(FPDF):
+    def footer(self):
+        self.set_y(-18)
+        self.set_draw_color(15, 110, 86)
+        self.set_line_width(0.4)
+        self.line(15, self.get_y(), 195, self.get_y())
+        self.ln(2)
+        self.set_font("Arial", "I", 8)
+        self.set_text_color(100, 100, 100)
+        self.cell(0, 5,
+            f"FISULAB  ·  Informe de apoyo diagnostico clinico con IA  ·  "
+            f"Generado el {time.strftime('%d/%m/%Y %H:%M')}  ·  Pagina {self.page_no()}",
+            align="C")
+
+
 # ── FUNCIÓN: generar PDF ─────────────────────────────────────────────────────
 def limpiar(texto):
     """Convierte texto a latin-1 eliminando caracteres no soportados por FPDF."""
@@ -337,59 +353,38 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     color_comp_map = {"MUY ALTA": ROJO, "MEDIA": AMBER, "BAJA": VERDE}
     color_comp     = color_comp_map.get(complejidad, VERDE_OSC)
 
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=22)
-    pdf.add_page()
-    pdf.set_margins(15, 15, 15)
-
-    # ── PIE DE PÁGINA automático en todas las páginas
-    class PDF(FPDF):
-        def footer(self):
-            self.set_y(-18)
-            self.set_draw_color(*VERDE)
-            self.set_line_width(0.4)
-            self.line(15, self.get_y(), 195, self.get_y())
-            self.ln(2)
-            self.set_font("Arial", "I", 8)
-            self.set_text_color(*GRIS_MED)
-            self.cell(0, 5,
-                f"FISULAB  ·  Informe de apoyo diagnostico clinico con IA  ·  "
-                f"Generado el {time.strftime('%d/%m/%Y %H:%M')}  ·  Pagina {self.page_no()}",
-                align="C")
-
-    pdf = PDF()
+    # Usar FisuPDF (definida a nivel de módulo) para pie de página automático
+    pdf = FisuPDF()
     pdf.set_auto_page_break(auto=True, margin=22)
     pdf.add_page()
     pdf.set_margins(15, 15, 15)
 
     # ── PÁGINA 1 — PORTADA RESUMEN ───────────────────────────────
-    # ── ENCABEZADO CON LOGO ──────────────────────────────────────
-    logo_path = "fisulab.png"
+    # ── ENCABEZADO CON LOGO/NOMBRE DE LA INSTITUCIÓN ──────────────────────────────────────
+     logo_path = "fisulab.png"
     if os.path.exists(logo_path):
         pdf.image(logo_path, x=15, y=10, w=26)
-
-    # ── NOMBRE DE LA INSTITUCIÓN ─────────────────────────────────
         pdf.set_xy(46, 12)
-        else:
-            pdf.set_fill_color(15, 110, 86)
-            pdf.rect(15, 10, 26, 26, "F")
-            pdf.set_xy(18, 19)
-            pdf.set_font("Arial", "B", 14)
-            pdf.set_text_color(255, 255, 255)
-            pdf.cell(20, 8, "F", align="C")
-            pdf.set_xy(46, 12)
-    
-        pdf.set_font("Arial", "B", 17)
-        pdf.set_text_color(*VERDE)
-        pdf.cell(0, 8, "FISULAB", ln=True)
-        pdf.set_xy(46, 21)
-        pdf.set_font("Arial", size=9)
-        pdf.set_text_color(*GRIS_MED)
-        pdf.cell(0, 5, limpiar("Fundación de Atención Integral para Labio y Paladar Hendido"), ln=True)
-        pdf.set_xy(46, 28)
-        pdf.set_font("Arial", "I", 8)
-        pdf.set_text_color(*GRIS_MED)
-        pdf.cell(0, 5, "Sistema de apoyo diagnostico con Inteligencia Artificial", ln=True)
+    else:
+        pdf.set_fill_color(15, 110, 86)
+        pdf.rect(15, 10, 26, 26, "F")
+        pdf.set_xy(18, 19)
+        pdf.set_font("Arial", "B", 14)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(20, 8, "F", align="C")
+        pdf.set_xy(46, 12)
+ 
+    pdf.set_font("Arial", "B", 17)
+    pdf.set_text_color(*VERDE)
+    pdf.cell(0, 8, "FISULAB", ln=True)
+    pdf.set_xy(46, 21)
+    pdf.set_font("Arial", size=9)
+    pdf.set_text_color(*GRIS_MED)
+    pdf.cell(0, 5, limpiar("Fundación de Atención Integral para Labio y Paladar Hendido"), ln=True)
+    pdf.set_xy(46, 28)
+    pdf.set_font("Arial", "I", 8)
+    pdf.set_text_color(*GRIS_MED)
+    pdf.cell(0, 5, "Sistema de apoyo diagnostico con Inteligencia Artificial", ln=True)
 
     # ── LÍNEA SEPARADORA VERDE ────────────────────────────────────
     pdf.set_y(40)
@@ -430,8 +425,8 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.cell(0, 5, limpiar(f"Fecha de generación: {time.strftime('%d/%m/%Y  %H:%M')}"))
     pdf.ln(12)
 
-    # ── RESUMEN CLÍNICO IA (TARJETAS) ─────────────────────────────
-   pdf.set_font("Arial", "B", 11)
+    # ── RESUMEN CLÍNICO IA (3 bloques de color) ─────────────────────────────
+    pdf.set_font("Arial", "B", 11)
     pdf.set_text_color(*VERDE_OSC)
     pdf.cell(0, 7, limpiar("1.  Resumen del Diagnóstico"), ln=True)
     pdf.set_draw_color(*VERDE)
@@ -571,12 +566,6 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
                 pdf.rect(15, bar_y, bar_w, 3, "F")
             pdf.ln(6)
             
-    # ── LÍNEA SEPARADORA GRIS ─────────────────────────────────────
-    pdf.set_draw_color(200, 200, 200)
-    pdf.set_line_width(0.4)
-    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
-    pdf.ln(5)
-
     # ── PÁGINA 2 — ANÁLISIS DETALLADO DE LA IA ────────────────────
     pdf.add_page()
 
