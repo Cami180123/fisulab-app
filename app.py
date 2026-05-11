@@ -1,7 +1,6 @@
 """
 FISULAB · IA PARA APOYO DIAGNÓSTICO ClÍNICO
 Dashboard de apoyo diagnóstico para labio y paladar hendido
-Requiere: pip install streamlit google-generativeai pillow fpdf2
 """
 
 import streamlit as st
