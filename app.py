@@ -677,6 +677,11 @@ if "datos_paciente" not in st.session_state:
     st.session_state.datos_paciente = {}
 if "datos_ia" not in st.session_state:
     st.session_state.datos_ia = {}
+    
+# Guarda los tokens y costos del último análisis
+if "tokens_info" not in st.session_state:
+    st.session_state.tokens_info = None
+
 
 # API key desde secrets o variable de entorno
 API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -785,6 +790,33 @@ Datos del paciente:
                     {"mime_type": mime_type, "data": imagen_bytes}
                 ])
                 st.session_state.resultado = response.text
+
+                # ── CÁLCULO DE TOKENS Y COSTOS ────────────────────────────
+                # Precios oficiales Gemini 2.5 Flash (Google AI Studio · 2025)
+                # Input  (prompt + imagen): $0.15 USD por millón de tokens
+                # Output (texto generado) : $0.60 USD por millón de tokens
+                _usage               = response.usage_metadata
+                _prompt_tokens       = _usage.prompt_token_count       # tokens enviados
+                _candidates_tokens   = _usage.candidates_token_count   # tokens recibidos
+                _total_tokens        = _usage.total_token_count        # suma total
+
+                _input_price_per_m   = 0.15   # USD por millón de tokens de entrada
+                _output_price_per_m  = 0.60   # USD por millón de tokens de salida
+
+                _input_cost  = (_prompt_tokens     / 1_000_000) * _input_price_per_m
+                _output_cost = (_candidates_tokens / 1_000_000) * _output_price_per_m
+                _total_cost  = _input_cost + _output_cost
+
+                # Guarda todo en session_state para mostrarlo en la columna derecha
+                st.session_state.tokens_info = {
+                    "prompt_tokens":     _prompt_tokens,
+                    "candidates_tokens": _candidates_tokens,
+                    "total_tokens":      _total_tokens,
+                    "input_cost":        _input_cost,
+                    "output_cost":       _output_cost,
+                    "total_cost":        _total_cost,
+                }
+                
                 st.session_state.datos_paciente = {
                     "id":   paciente_id or f"Caso {len(st.session_state.historial)+1}",
                     "edad": paciente_edad or "No especificada",
@@ -1205,6 +1237,86 @@ with col_der:
 
         # Métricas casos este mes + precisión + tipo frecuente
         st.markdown(html_metricas, unsafe_allow_html=True)
+
+        # ── PANEL DE COSTOS —
+        ti = st.session_state.get("tokens_info")
+        if ti:
+            # Conversión aproximada a pesos colombianos
+            COP_POR_USD = 4_200
+
+            st.markdown("""
+            <div style="margin-top:14px;background:#f0faf5;border:1px solid #9FE1CB;
+                        border-radius:10px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:600;color:#085041;
+                            text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
+                    💰 Costo del último análisis
+                </div>
+            """, unsafe_allow_html=True)
+
+            # Fila tokens
+            st.markdown(f"""
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                    <div style="background:white;border:1px solid #e9ecef;border-radius:8px;
+                                padding:8px;text-align:center;">
+                        <div style="font-size:16px;font-weight:700;color:#085041;">
+                            {ti['prompt_tokens']:,}
+                        </div>
+                        <div style="font-size:9px;color:#6c757d;margin-top:2px;">
+                            Tokens entrada
+                        </div>
+                    </div>
+                    <div style="background:white;border:1px solid #e9ecef;border-radius:8px;
+                                padding:8px;text-align:center;">
+                        <div style="font-size:16px;font-weight:700;color:#534AB7;">
+                            {ti['candidates_tokens']:,}
+                        </div>
+                        <div style="font-size:9px;color:#6c757d;margin-top:2px;">
+                            Tokens salida
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+            # Fila costos
+            st.markdown(f"""
+                <div style="background:white;border:1px solid #e9ecef;border-radius:8px;
+                            padding:10px 12px;margin-bottom:6px;">
+                    <div style="display:flex;justify-content:space-between;
+                                align-items:center;margin-bottom:5px;">
+                        <span style="font-size:11px;color:#6c757d;">Costo entrada</span>
+                        <span style="font-size:12px;font-weight:600;color:#212529;">
+                            ${ti['input_cost']:.6f} USD
+                        </span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;
+                                align-items:center;margin-bottom:5px;">
+                        <span style="font-size:11px;color:#6c757d;">Costo salida</span>
+                        <span style="font-size:12px;font-weight:600;color:#212529;">
+                            ${ti['output_cost']:.6f} USD
+                        </span>
+                    </div>
+                    <div style="border-top:1px solid #e9ecef;margin:6px 0;"></div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:12px;font-weight:700;color:#085041;">
+                            Total análisis
+                        </span>
+                        <div style="text-align:right;">
+                            <div style="font-size:14px;font-weight:700;color:#085041;">
+                                ${ti['total_cost']:.6f} USD
+                            </div>
+                            <div style="font-size:10px;color:#6c757d;">
+                                ≈ ${ti['total_cost'] * COP_POR_USD:,.0f} COP
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size:9px;color:#6c757d;text-align:center;line-height:1.4;">
+                    Gemini 2.5 Flash · $0.15/M tokens entrada · $0.60/M salida<br>
+                    Tasa de referencia: 1 USD ≈ {COP_POR_USD:,} COP
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
 
 # ── PIE DE PÁGINA ─────────────────────────────────────────────────────────────
 st.divider()
