@@ -217,11 +217,7 @@ Especialidades requeridas: ortopedia prequirúrgica, fonoaudiología, ortodoncia
 **8. DATOS FALTANTES Y ADVERTENCIAS**
 Señala qué información faltante podría cambiar el pronóstico.
 
----
-**IMPORTANTE: Este análisis es una guía de apoyo para el médico tratante. No constituye un**
-**diagnóstico médico definitivo. Es fundamental una evaluación clínica completa y multidisciplinar de FISULAB mediante evaluación presencial completa.**
 
----
 # BLOQUE ESTRUCTURADO (OBLIGATORIO)
 Al FINAL de tu respuesta incluye SIEMPRE este bloque JSON exacto con los valores reales del caso.
 No omitas este bloque bajo ninguna circunstancia.
