@@ -677,9 +677,6 @@ if "datos_paciente" not in st.session_state:
     st.session_state.datos_paciente = {}
 if "datos_ia" not in st.session_state:
     st.session_state.datos_ia = {}
-    
-
-
 
 # API key desde secrets o variable de entorno
 API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -788,7 +785,6 @@ Datos del paciente:
                     {"mime_type": mime_type, "data": imagen_bytes}
                 ])
                 st.session_state.resultado = response.text
-              
                 st.session_state.datos_paciente = {
                     "id":   paciente_id or f"Caso {len(st.session_state.historial)+1}",
                     "edad": paciente_edad or "No especificada",
