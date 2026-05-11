@@ -1040,7 +1040,17 @@ with col_centro:
             
             st.markdown("### 📄 Informe completo")
             with st.container(height=400, border=False):
-                st.markdown(resultado_texto)
+                # Limpiar el texto antes de mostrarlo en pantalla,
+                # igual que se hace en generar_pdf().
+                # Elimina el bloque JSON, los bloques de código ```
+                # y el encabezado "BLOQUE ESTRUCTURADO (OBLIGATORIO)"
+                # para que el médico solo vea el informe clínico limpio.
+                resultado_limpio = resultado_texto
+                resultado_limpio = re.sub(r"# BLOQUE ESTRUCTURADO.*", "", resultado_limpio, flags=re.DOTALL)
+                resultado_limpio = re.sub(r"```json.*?```", "", resultado_limpio, flags=re.DOTALL)
+                resultado_limpio = re.sub(r"```.*?```", "", resultado_limpio, flags=re.DOTALL)
+                resultado_limpio = re.sub(r"\n{3,}", "\n\n", resultado_limpio).strip()
+                st.markdown(resultado_limpio)
 
         # ── Fuera del scroll: PDF, botones y disclaimer ───────────
    
