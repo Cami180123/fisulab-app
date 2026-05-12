@@ -1033,7 +1033,7 @@ with col_centro:
             st.divider()
             
             st.markdown("### 📄 Informe completo")
-            with st.container(height=300, border=False)
+            with st.container(height=300, border=False):
                 # Limpiar el texto antes de mostrarlo en pantalla,
                 # igual que se hace en generar_pdf().
                 # Elimina el bloque JSON, los bloques de código ```
