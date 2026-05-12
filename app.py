@@ -710,19 +710,35 @@ col_centro, col_der = st.columns([2.8, 1.1])
 # ════════════════════════════════════════════════════════════
 with col_centro:
 
-    # ── FILA SUPERIOR: formulario + imagen + botones ──────────
-    # En escritorio: 3 sub-columnas lado a lado.
-    # En celular: Streamlit las apila automáticamente.
-    f1, f2, f3 = st.columns([1.2, 1.2, 1])
+    # ── FILA 1: todos los datos del paciente en una sola línea ──
+    # 4 columnas: nombre más ancho, edad y sexo más angostos
+    d1, d2, d3 = st.columns([2.2, 0.9, 1.1])
 
-    with f1:
-        st.markdown("##### 👤 Datos del paciente")
-        paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
-        paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
-        paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
+    with d1:
+        paciente_id = st.text_input(
+            "👤 Nombre / ID",
+            placeholder="Paciente 2024-112"
+        )
+    with d2:
+        paciente_edad = st.text_input(
+            "Edad",
+            placeholder="Ej: 3 meses"
+        )
+    with d3:
+        paciente_sexo = st.selectbox(
+            "Sexo",
+            ["No especificado", "Femenino", "Masculino"]
+        )
 
-    with f2:
-        st.markdown("##### 📷 Imagen clínica")
+    # ── FILA 2: imagen a la izquierda, botones a la derecha ────
+    img_col, btn_col = st.columns([2.5, 1.2])
+
+    with img_col:
+        st.markdown(
+            '<div style="font-size:13px;font-weight:500;color:#212529;margin-bottom:4px;">'
+            '📷 Imagen clínica</div>',
+            unsafe_allow_html=True
+        )
         imagen_file = st.file_uploader(
             "Cargar imagen",
             type=["jpg", "jpeg", "png", "webp"],
@@ -730,18 +746,22 @@ with col_centro:
         )
         if imagen_file:
             imagen_pil = Image.open(imagen_file)
+            # Muestra la imagen en formato horizontal compacto
             st.image(imagen_pil, caption="Vista previa", use_container_width=True)
 
-    with f3:
-        st.markdown("##### ⚙️ Acciones")
-        # Espacio para alinear verticalmente con los otros campos
-        st.markdown("<div style='margin-top:28px'></div>", unsafe_allow_html=True)
+    with btn_col:
+        st.markdown(
+            '<div style="font-size:13px;font-weight:500;color:#212529;margin-bottom:4px;">'
+            '⚙️ Acciones</div>',
+            unsafe_allow_html=True
+        )
         analizar = st.button(
             "🔬 Analizar con IA",
             use_container_width=True,
             type="primary",
             disabled=(not imagen_file or not API_KEY)
         )
+        st.markdown("<div style='margin-top:6px'></div>", unsafe_allow_html=True)
         st.button(
             "🆕 Nuevo paciente",
             use_container_width=True,
@@ -754,8 +774,7 @@ with col_centro:
         if not API_KEY:
             st.caption("⚠️ API Key no configurada.")
         if not imagen_file:
-            st.caption("⚠️ Carga una imagen para continuar.")
-
+            st.caption("⚠️ Carga una imagen.")
     st.divider()
 
     # ════════════════════════════════════════════════════════════
