@@ -718,10 +718,7 @@ st.divider()
 # ── LAYOUT PRINCIPAL — las 3 columnas van debajo de los datos ─
 col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
 
-# ════════════════════════════════════════════════════════════
-# COLUMNA IZQUIERDA — Solo imagen y botones
-# ════════════════════════════════════════════════════════════
-with col_izq:
+
 # ════════════════════════════════════════════════════════════
 # COLUMNA IZQUIERDA — Solo imagen y botones
 # ════════════════════════════════════════════════════════════
