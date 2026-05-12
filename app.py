@@ -702,9 +702,8 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── FILA DATOS DEL PACIENTE — encima de todo el layout ───────
-# Va justo después del topbar, antes de las columnas.
-# st.columns() aquí ocupa el 100% del ancho disponible.
+# ── FILA DATOS DEL PACIENTE ───────
+st.markdown("<div style='margin-top:12px'></div>", unsafe_allow_html=True)
 f_id, f_edad, f_sexo = st.columns([2.2, 0.85, 1.05])
 with f_id:
     paciente_id   = st.text_input("👤 Nombre / ID", placeholder="Paciente 2024-112")
@@ -715,7 +714,7 @@ with f_sexo:
 
 st.divider()
 
-# ── LAYOUT PRINCIPAL — las 3 columnas van debajo de los datos ─
+# ── LAYOUT PRINCIPAL —
 col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
 
 
