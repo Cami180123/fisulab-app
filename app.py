@@ -713,8 +713,7 @@ with col_izq:
     paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
     paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
     paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
-    tipo_imagen   = st.selectbox("Tipo de imagen", ["Fotografía frontal", "Fotografía lateral",
-                                                     "Intraoral", "Radiografía panorámica"])
+    
 
     st.divider()
 
