@@ -702,17 +702,12 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── LAYOUT PRINCIPAL ─────────────────────────────────────────────────────────
-col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
-
-# ════════════════════════════════════════════════════════════
-# FILA SUPERIOR — Datos del paciente en una sola línea
-# Ocupa todo el ancho antes de las 3 columnas principales
-# ════════════════════════════════════════════════════════════
-# Esta fila va FUERA de las columnas para ocupar el ancho completo
+# ── FILA DATOS DEL PACIENTE — encima de todo el layout ───────
+# Va justo después del topbar, antes de las columnas.
+# st.columns() aquí ocupa el 100% del ancho disponible.
 f_id, f_edad, f_sexo = st.columns([2.2, 0.85, 1.05])
 with f_id:
-    paciente_id = st.text_input("👤 Nombre / ID", placeholder="Paciente 2024-112")
+    paciente_id   = st.text_input("👤 Nombre / ID", placeholder="Paciente 2024-112")
 with f_edad:
     paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
 with f_sexo:
@@ -720,6 +715,13 @@ with f_sexo:
 
 st.divider()
 
+# ── LAYOUT PRINCIPAL — las 3 columnas van debajo de los datos ─
+col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
+
+# ════════════════════════════════════════════════════════════
+# COLUMNA IZQUIERDA — Solo imagen y botones
+# ════════════════════════════════════════════════════════════
+with col_izq:
 # ════════════════════════════════════════════════════════════
 # COLUMNA IZQUIERDA — Solo imagen y botones
 # ════════════════════════════════════════════════════════════
