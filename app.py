@@ -703,20 +703,27 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ── LAYOUT PRINCIPAL ─────────────────────────────────────────────────────────
-col_izq, col_centro, col_der = st.columns([1.2, 2.5, 1.1])
+col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
 
 # ════════════════════════════════════════════════════════════
-# COLUMNA IZQUIERDA
+# FILA SUPERIOR — Datos del paciente en una sola línea
+# Ocupa todo el ancho antes de las 3 columnas principales
+# ════════════════════════════════════════════════════════════
+# Esta fila va FUERA de las columnas para ocupar el ancho completo
+f_id, f_edad, f_sexo = st.columns([2.2, 0.85, 1.05])
+with f_id:
+    paciente_id = st.text_input("👤 Nombre / ID", placeholder="Paciente 2024-112")
+with f_edad:
+    paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
+with f_sexo:
+    paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
+
+st.divider()
+
+# ════════════════════════════════════════════════════════════
+# COLUMNA IZQUIERDA — Solo imagen y botones
 # ════════════════════════════════════════════════════════════
 with col_izq:
-    st.markdown("#### 👤 Datos del paciente")
-    paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
-    paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
-    paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
-    
-
-    st.divider()
-
     st.markdown("#### 📷 Imagen clínica")
     imagen_file = st.file_uploader(
         "Cargar imagen",
@@ -736,7 +743,7 @@ with col_izq:
     )
 
     if not API_KEY:
-        st.caption("⚠️ API Key no configurada. Agrégala en Streamlit Secrets.")
+        st.caption("⚠️ API Key no configurada.")
     if not imagen_file:
         st.caption("⚠️ Carga una imagen para continuar.")
 
@@ -747,7 +754,6 @@ with col_izq:
         st.session_state.datos_paciente = {}
         st.session_state.datos_ia     = {}
         st.rerun()
-
 # ════════════════════════════════════════════════════════════
 # LÓGICA DE ANÁLISIS
 # ════════════════════════════════════════════════════════════
@@ -767,7 +773,7 @@ Datos del paciente:
 - ID / Nombre: {paciente_id if paciente_id else 'No proporcionado'}
 - Edad: {paciente_edad if paciente_edad else 'No proporcionada'}
 - Sexo: {paciente_sexo}
-- Tipo de imagen: {tipo_imagen}
+
 """
         prompt_completo = contexto_paciente + "\n\n" + PROMPT_MEDICO
 
