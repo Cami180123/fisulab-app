@@ -713,8 +713,7 @@ with col_izq:
     paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
     paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
     paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
-    tipo_imagen   = st.selectbox("Tipo de imagen", ["Fotografía frontal", "Fotografía lateral",
-                                                     "Intraoral", "Radiografía panorámica"])
+   
 
     st.divider()
 
@@ -768,7 +767,7 @@ Datos del paciente:
 - ID / Nombre: {paciente_id if paciente_id else 'No proporcionado'}
 - Edad: {paciente_edad if paciente_edad else 'No proporcionada'}
 - Sexo: {paciente_sexo}
-- Tipo de imagen: {tipo_imagen}
+
 """
         prompt_completo = contexto_paciente + "\n\n" + PROMPT_MEDICO
 
@@ -872,7 +871,7 @@ with col_centro:
         color_comp = color_map.get(complejidad, "#3B6D11")
 
         # Contenedor scrollable — todo el informe va dentro
-        with st.container(height=560, border=False):
+        with st.container(height=480, border=False):
      
             st.markdown("**📌 Resumen clínico IA**")
     
@@ -952,7 +951,7 @@ with col_centro:
     
             # ── Cronograma orientativo — dinámico ─────────────────────────
             st.markdown("**🗓️ Cronograma orientativo de tratamiento**")
-            with st.container(height=320, border=False):
+            with st.container(height=240, border=False):
                 if cronograma:
                     # Colores alternos para los pasos del cronograma
                     colores_tl = ["#0F6E56", "#534AB7", "#854F0B", "#185FA5", "#993C1D", "#3B6D11"]
@@ -1034,7 +1033,7 @@ with col_centro:
             st.divider()
             
             st.markdown("### 📄 Informe completo")
-            with st.container(height=400, border=False):
+            with st.container(height=300, border=False)
                 # Limpiar el texto antes de mostrarlo en pantalla,
                 # igual que se hace en generar_pdf().
                 # Elimina el bloque JSON, los bloques de código ```
@@ -1095,233 +1094,169 @@ with col_centro:
         """, unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
-# COLUMNA DERECHA — Historial y estadísticas
+# COLUMNA DERECHA — Solo estadísticas y costos
 # ════════════════════════════════════════════════════════════
 with col_der:
-    tab1, tab2 = st.tabs(["📁 Historial", "📊 Estadísticas"])
 
-    # ── Cálculos compartidos para ambas tabs ──────────────────
+    # ── Cálculos ─────────────────────────────────────────────
     total  = len(st.session_state.historial)
     altas  = sum(1 for c in st.session_state.historial if c["complejidad"] == "alta")
     medias = sum(1 for c in st.session_state.historial if c["complejidad"] == "media")
     bajas  = sum(1 for c in st.session_state.historial if c["complejidad"] == "baja")
-
-    # Casos del mes actual
     mes_actual = time.strftime("%b %Y")
     casos_mes  = sum(1 for c in st.session_state.historial if mes_actual in c.get("fecha", ""))
     if casos_mes == 0:
-        casos_mes = total  # fallback: si no coincide el formato, muestra total
+        casos_mes = total
 
-    # Precisión validada (referencia estática hasta integrar módulo de validación real)
-    precision = 89
-
-    # Tipo más frecuente de fisura — viene del campo "clasificacion" guardado en historial
     conteo_tipos = {}
     for c in st.session_state.historial:
         tipo = c.get("clasificacion", "No determinada")
         conteo_tipos[tipo] = conteo_tipos.get(tipo, 0) + 1
     if conteo_tipos:
-        tipo_top   = max(conteo_tipos, key=conteo_tipos.get)
+        tipo_top = max(conteo_tipos, key=conteo_tipos.get)
         tipo_top_n = conteo_tipos[tipo_top]
         tipo_top_pct = round((tipo_top_n / total) * 100) if total > 0 else 0
-        # Abreviar el nombre para que quepa en el panel estrecho
         tipo_top_corto = tipo_top.replace("Labio Leporino", "LL").replace("Labio y Paladar Hendido", "LPH")
     else:
-        tipo_top_corto = "LL Unilateral"
-        tipo_top_pct   = 58  # valor de referencia mientras no haya datos reales
+        tipo_top_corto = "—"
+        tipo_top_pct   = 0
 
-    # HTML de las métricas (mismo bloque reutilizado en ambas tabs)
-    html_metricas = f"""
-    <div style="margin-top:14px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;
-                        padding:10px 8px;text-align:center;">
-                <div style="font-size:22px;font-weight:700;color:#085041;">{casos_mes}</div>
-                <div style="font-size:10px;color:#6c757d;margin-top:2px;line-height:1.3;">
-                    Casos este mes
-                </div>
-            </div>
-            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;
-                        padding:10px 8px;text-align:center;">
-                <div style="font-size:22px;font-weight:700;color:#185FA5;">{precision}%</div>
-                <div style="font-size:10px;color:#6c757d;margin-top:2px;line-height:1.3;">
-                    Precisión validada
-                </div>
-            </div>
+    # ── Resumen rápido en 2 chips ─────────────────────────────
+    st.markdown(f"""
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;margin-top:4px;">
+        <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:8px;
+                    padding:8px;text-align:center;">
+            <div style="font-size:20px;font-weight:700;color:#085041;">{total}</div>
+            <div style="font-size:10px;color:#6c757d;">Casos analizados</div>
         </div>
-        <div style="background:#E1F5EE;border-radius:10px;padding:10px 14px;">
-            <div style="font-size:13px;font-weight:700;color:#085041;line-height:1.3;">
-                {tipo_top_corto}
-            </div>
-            <div style="font-size:11px;color:#0F6E56;margin-top:3px;">
-                Tipo más frecuente · {tipo_top_pct}%
-            </div>
+        <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:8px;
+                    padding:8px;text-align:center;">
+            <div style="font-size:20px;font-weight:700;color:#185FA5;">89%</div>
+            <div style="font-size:10px;color:#6c757d;">Precisión validada</div>
         </div>
     </div>
-    """
+    """, unsafe_allow_html=True)
 
-    # ── TAB 1: Historial ─────────────────────────────────────
-    with tab1:
-        st.markdown("")
-        if not st.session_state.historial:
-            st.caption("Aún no hay casos analizados.")
-        else:
-            badge_map = {
-                "alta":  '<span class="badge-alta">Complejidad alta</span>',
-                "media": '<span class="badge-media">Complejidad media</span>',
-                "baja":  '<span class="badge-baja">Complejidad baja</span>',
-            }
-            for caso in st.session_state.historial[:8]:
-                badge = badge_map.get(caso["complejidad"], "")
-                nombre_h = caso['nombre']
-                fecha_h  = caso['fecha']
-                st.markdown(
-                    f'<div class="caso-card"><div class="caso-nombre">🗂️ {nombre_h}</div>'
-                    f'<div class="caso-fecha">📅 {fecha_h}</div>'
-                    f'<div style="margin-top:6px">{badge}</div></div>',
-                    unsafe_allow_html=True
-                )
-        # Métricas al final del historial
-        st.markdown(html_metricas, unsafe_allow_html=True)
-
-  # ── TAB 2: Estadísticas ───────────────────────────────────
-    with tab2:
-        if total == 0:
-            st.caption("Aún no hay casos analizados.")
-        else:
-            # ── Barras de complejidad con porcentajes reales ──────
-            def barra_stat(label, valor, total, color_bg, color_bar, color_txt):
-                pct = round((valor / total) * 100) if total > 0 else 0
-                return (
-                    f'<div style="margin-bottom:10px;">'
-                    f'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
-                    f'<span style="font-size:12px;font-weight:600;color:#212529">{label}</span>'
-                    f'<span style="font-size:12px;font-weight:700;color:{color_txt}">{valor} caso(s) · {pct}%</span></div>'
-                    f'<div style="width:100%;height:7px;background:#e9ecef;border-radius:6px;overflow:hidden;">'
-                    f'<div style="width:{pct}%;height:7px;background:{color_bar};border-radius:6px;"></div></div>'
-                    f'</div>'
-                )
-
-            st.markdown(
-                f'<div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:12px 14px;margin-bottom:10px;">'
-                f'<div style="font-size:11px;color:#6c757d;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Total de casos analizados</div>'
-                f'<div style="font-size:28px;font-weight:700;color:#085041">{total}</div>'
-                f'</div>',
-                unsafe_allow_html=True
+    # ── Barras de complejidad ─────────────────────────────────
+    if total > 0:
+        def barra(label, valor, color_bar, color_txt):
+            pct = round((valor / total) * 100) if total > 0 else 0
+            return (
+                f'<div style="margin-bottom:7px;">'
+                f'<div style="display:flex;justify-content:space-between;margin-bottom:2px;">'
+                f'<span style="font-size:11px;color:#212529">{label}</span>'
+                f'<span style="font-size:11px;font-weight:600;color:{color_txt}">{valor} · {pct}%</span></div>'
+                f'<div style="width:100%;height:5px;background:#e9ecef;border-radius:4px;overflow:hidden;">'
+                f'<div style="width:{pct}%;height:5px;background:{color_bar};border-radius:4px;"></div></div>'
+                f'</div>'
             )
+        st.markdown(
+            '<div style="font-size:10px;color:#6c757d;text-transform:uppercase;'
+            'letter-spacing:0.5px;margin-bottom:6px;">Complejidad</div>'
+            + barra("Alta",  altas,  "#A32D2D", "#A32D2D")
+            + barra("Media", medias, "#854F0B", "#854F0B")
+            + barra("Baja",  bajas,  "#3B6D11", "#3B6D11"),
+            unsafe_allow_html=True
+        )
 
-            st.markdown(
-                barra_stat("Complejidad alta",  altas,  total, "#FCEBEB", "#A32D2D", "#A32D2D") +
-                barra_stat("Complejidad media", medias, total, "#FAEEDA", "#854F0B", "#854F0B") +
-                barra_stat("Complejidad baja",  bajas,  total, "#EAF3DE", "#3B6D11", "#3B6D11"),
-                unsafe_allow_html=True
-            )
-
-            # ── Distribución por tipo de fisura ──────────────────
-            if conteo_tipos:
-                st.markdown(
-                    '<div style="font-size:11px;color:#6c757d;margin:10px 0 6px;'
-                    'text-transform:uppercase;letter-spacing:0.5px;">Por tipo de fisura</div>',
-                    unsafe_allow_html=True
-                )
-                colores_tipo = ["#0F6E56", "#534AB7", "#854F0B", "#185FA5", "#993C1D"]
-                for i, (tipo, cnt) in enumerate(sorted(conteo_tipos.items(), key=lambda x: x[1], reverse=True)):
-                    pct_t  = round((cnt / total) * 100)
-                    color_t = colores_tipo[i % len(colores_tipo)]
-                    nombre_corto = tipo.replace("Labio Leporino", "LL").replace("Labio y Paladar Hendido", "LPH")
-                    st.markdown(
-                        f'<div style="margin-bottom:8px;">'
-                        f'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
-                        f'<span style="font-size:11px;font-weight:600;color:#212529">{nombre_corto}</span>'
-                        f'<span style="font-size:11px;font-weight:700;color:{color_t}">{cnt} · {pct_t}%</span></div>'
-                        f'<div style="width:100%;height:6px;background:#e9ecef;border-radius:6px;overflow:hidden;">'
-                        f'<div style="width:{pct_t}%;height:6px;background:{color_t};border-radius:6px;"></div></div>'
-                        f'</div>',
-                        unsafe_allow_html=True
-                    )
-
-        # Métricas casos este mes + precisión + tipo frecuente
-        st.markdown(html_metricas, unsafe_allow_html=True)
-
-        # ── PANEL DE COSTOS —
-        ti = st.session_state.get("tokens_info")
-        if ti:
-            # Conversión aproximada a pesos colombianos
-            COP_POR_USD = 4_200
-
-            st.markdown("""
-            <div style="margin-top:14px;background:#f0faf5;border:1px solid #9FE1CB;
-                        border-radius:10px;padding:12px 14px;">
-                <div style="font-size:11px;font-weight:600;color:#085041;
-                            text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
-                    💰 Costo del último análisis
-                </div>
-            """, unsafe_allow_html=True)
-
-            # Fila tokens
+        # ── Tipo más frecuente ────────────────────────────────
+        if tipo_top_corto != "—":
             st.markdown(f"""
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
-                    <div style="background:white;border:1px solid #e9ecef;border-radius:8px;
-                                padding:8px;text-align:center;">
-                        <div style="font-size:16px;font-weight:700;color:#085041;">
-                            {ti['prompt_tokens']:,}
-                        </div>
-                        <div style="font-size:9px;color:#6c757d;margin-top:2px;">
-                            Tokens entrada
-                        </div>
-                    </div>
-                    <div style="background:white;border:1px solid #e9ecef;border-radius:8px;
-                                padding:8px;text-align:center;">
-                        <div style="font-size:16px;font-weight:700;color:#534AB7;">
-                            {ti['candidates_tokens']:,}
-                        </div>
-                        <div style="font-size:9px;color:#6c757d;margin-top:2px;">
-                            Tokens salida
-                        </div>
-                    </div>
+            <div style="background:#E1F5EE;border-radius:8px;padding:8px 10px;margin-top:4px;margin-bottom:10px;">
+                <div style="font-size:10px;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px;">
+                    Tipo más frecuente
                 </div>
-            """, unsafe_allow_html=True)
-
-            # Fila costos
-            st.markdown(f"""
-                <div style="background:white;border:1px solid #e9ecef;border-radius:8px;
-                            padding:10px 12px;margin-bottom:6px;">
-                    <div style="display:flex;justify-content:space-between;
-                                align-items:center;margin-bottom:5px;">
-                        <span style="font-size:11px;color:#6c757d;">Costo entrada</span>
-                        <span style="font-size:12px;font-weight:600;color:#212529;">
-                            ${ti['input_cost']:.6f} USD
-                        </span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;
-                                align-items:center;margin-bottom:5px;">
-                        <span style="font-size:11px;color:#6c757d;">Costo salida</span>
-                        <span style="font-size:12px;font-weight:600;color:#212529;">
-                            ${ti['output_cost']:.6f} USD
-                        </span>
-                    </div>
-                    <div style="border-top:1px solid #e9ecef;margin:6px 0;"></div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:12px;font-weight:700;color:#085041;">
-                            Total análisis
-                        </span>
-                        <div style="text-align:right;">
-                            <div style="font-size:14px;font-weight:700;color:#085041;">
-                                ${ti['total_cost']:.6f} USD
-                            </div>
-                            <div style="font-size:10px;color:#6c757d;">
-                                ≈ ${ti['total_cost'] * COP_POR_USD:,.0f} COP
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div style="font-size:9px;color:#6c757d;text-align:center;line-height:1.4;">
-                    Gemini 2.5 Flash · $0.15/M tokens entrada · $0.60/M salida<br>
-                    Tasa de referencia: 1 USD ≈ {COP_POR_USD:,} COP
+                <div style="font-size:12px;font-weight:600;color:#085041;margin-top:2px;">
+                    {tipo_top_corto} · {tipo_top_pct}%
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
+    st.divider()
+
+    # ── Historial compacto (últimos 5 casos, sin tab) ─────────
+    if st.session_state.historial:
+        st.markdown(
+            '<div style="font-size:10px;color:#6c757d;text-transform:uppercase;'
+            'letter-spacing:0.5px;margin-bottom:6px;">Últimos casos</div>',
+            unsafe_allow_html=True
+        )
+        badge_map = {
+            "alta":  ('<span style="background:#FCEBEB;color:#A32D2D;padding:2px 7px;'
+                      'border-radius:10px;font-size:10px;">Alta</span>'),
+            "media": ('<span style="background:#FAEEDA;color:#854F0B;padding:2px 7px;'
+                      'border-radius:10px;font-size:10px;">Media</span>'),
+            "baja":  ('<span style="background:#EAF3DE;color:#3B6D11;padding:2px 7px;'
+                      'border-radius:10px;font-size:10px;">Baja</span>'),
+        }
+        for caso in st.session_state.historial[:5]:
+            badge = badge_map.get(caso["complejidad"], "")
+            st.markdown(
+                f'<div style="display:flex;justify-content:space-between;align-items:center;'
+                f'padding:6px 8px;border:1px solid #e9ecef;border-radius:7px;margin-bottom:5px;background:white;">'
+                f'<div>'
+                f'<div style="font-size:11px;font-weight:600;color:#212529;">{caso["nombre"]}</div>'
+                f'<div style="font-size:10px;color:#6c757d;">{caso["fecha"]}</div>'
+                f'</div>'
+                f'{badge}</div>',
+                unsafe_allow_html=True
+            )
+
+    st.divider()
+
+    # ── Panel de costos ───────────────────────────────────────
+    ti = st.session_state.get("tokens_info")
+    if ti:
+        COP_POR_USD = 4_200
+        st.markdown(f"""
+        <div style="background:#f0faf5;border:1px solid #9FE1CB;border-radius:8px;padding:10px 12px;">
+            <div style="font-size:10px;font-weight:600;color:#085041;text-transform:uppercase;
+                        letter-spacing:0.5px;margin-bottom:8px;">💰 Costo del último análisis</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;">
+                <div style="background:white;border:1px solid #e9ecef;border-radius:6px;
+                            padding:6px;text-align:center;">
+                    <div style="font-size:13px;font-weight:700;color:#085041;">{ti['prompt_tokens']:,}</div>
+                    <div style="font-size:9px;color:#6c757d;">Tokens entrada</div>
+                </div>
+                <div style="background:white;border:1px solid #e9ecef;border-radius:6px;
+                            padding:6px;text-align:center;">
+                    <div style="font-size:13px;font-weight:700;color:#534AB7;">{ti['candidates_tokens']:,}</div>
+                    <div style="font-size:9px;color:#6c757d;">Tokens salida</div>
+                </div>
+            </div>
+            <div style="background:white;border:1px solid #e9ecef;border-radius:6px;padding:8px 10px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                    <span style="font-size:10px;color:#6c757d;">Entrada</span>
+                    <span style="font-size:10px;font-weight:600;color:#212529;">${ti['input_cost']:.6f} USD</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                    <span style="font-size:10px;color:#6c757d;">Salida</span>
+                    <span style="font-size:10px;font-weight:600;color:#212529;">${ti['output_cost']:.6f} USD</span>
+                </div>
+                <div style="border-top:1px solid #e9ecef;padding-top:5px;
+                            display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:11px;font-weight:700;color:#085041;">Total</span>
+                    <div style="text-align:right;">
+                        <div style="font-size:13px;font-weight:700;color:#085041;">
+                            ${ti['total_cost']:.6f} USD
+                        </div>
+                        <div style="font-size:9px;color:#6c757d;">
+                            ≈ ${ti['total_cost'] * COP_POR_USD:,.0f} COP
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="font-size:9px;color:#6c757d;text-align:center;margin-top:6px;line-height:1.4;">
+                Gemini 2.5 Flash · $0.15/M entrada · $0.60/M salida
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(
+            '<div style="font-size:11px;color:#adb5bd;text-align:center;margin-top:8px;">'
+            'El costo aparecerá aquí después del primer análisis.</div>',
+            unsafe_allow_html=True
+        )
 
 # ── PIE DE PÁGINA ─────────────────────────────────────────────────────────────
 st.divider()
