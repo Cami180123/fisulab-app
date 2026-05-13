@@ -712,7 +712,6 @@ with f_edad:
 with f_sexo:
     paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
 
-st.markdown("<div style='margin-top:-18px'></div>", unsafe_allow_html=True)
 st.divider()
 
 # ── LAYOUT PRINCIPAL —
