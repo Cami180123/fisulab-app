@@ -703,7 +703,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ── FILA DATOS DEL PACIENTE ───────
-st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top:2px'></div>", unsafe_allow_html=True)
 f_id, f_edad, f_sexo = st.columns([2.2, 0.85, 1.05])
 with f_id:
     paciente_id   = st.text_input("👤 Nombre / ID", placeholder="Paciente 2024-112")
