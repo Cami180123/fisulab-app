@@ -1175,7 +1175,7 @@ with col_der:
                 "media": '<span class="badge-media">Complejidad media</span>',
                 "baja":  '<span class="badge-baja">Complejidad baja</span>',
             }
-            for caso in st.session_state.historial[:8]:
+            for i, caso in enumarate(st.session_state.historial[:8]):
                 badge = badge_map.get(caso["complejidad"], "")
                 nombre_h = caso['nombre']
                 fecha_h  = caso['fecha']
