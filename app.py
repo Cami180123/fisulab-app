@@ -703,7 +703,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ── FILA DATOS DEL PACIENTE ───────
-st.markdown("<div style='margin-top:12px'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
 f_id, f_edad, f_sexo = st.columns([2.2, 0.85, 1.05])
 with f_id:
     paciente_id   = st.text_input("👤 Nombre / ID", placeholder="Paciente 2024-112")
@@ -712,6 +712,7 @@ with f_edad:
 with f_sexo:
     paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
 
+st.markdown("<div style='margin-top:-18px'></div>", unsafe_allow_html=True)
 st.divider()
 
 # ── LAYOUT PRINCIPAL —
@@ -1184,6 +1185,16 @@ with col_der:
                     f'<div style="margin-top:6px">{badge}</div></div>',
                     unsafe_allow_html=True
                 )
+                if st.button("📂 Ver caso", key=f"cargar_caso_{i}", use_container_width=True):
+                    st.session_state.resultado      = caso.get("resultado", None)
+                    st.session_state.datos_ia       = caso.get("datos_ia", {})
+                    st.session_state.datos_paciente = {
+                        "id":   caso.get("nombre", ""),
+                        "edad": caso.get("edad", "No especificada"),
+                        "sexo": caso.get("sexo", "No especificado"),
+                    }
+                    st.rerun()
+       
         # Métricas al final del historial
         st.markdown(html_metricas, unsafe_allow_html=True)
 
