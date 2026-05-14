@@ -676,6 +676,8 @@ if "datos_ia" not in st.session_state:
 # Guarda los tokens y costos del último análisis
 if "tokens_info" not in st.session_state:
     st.session_state.tokens_info = None
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = 0
 
 
 # API key desde secrets o variable de entorno
