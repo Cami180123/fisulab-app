@@ -728,7 +728,7 @@ with col_izq:
     imagen_file = st.file_uploader(
         "Cargar imagen",
         type=["jpg", "jpeg", "png", "webp"],
-        label_visibility="collapsed"
+        label_visibility="collapsed",
         key=f"uploader_{st.session_state.uploader_key}"
     )
 
