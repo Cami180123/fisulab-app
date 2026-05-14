@@ -1207,6 +1207,7 @@ with col_der:
                         "sexo": caso.get("sexo", "No especificado"),
                     }
                     st.session_state.imagen_historial = caso.get("imagen_bytes", None)
+                    st.session_state.uploader_key    += 1
                     st.rerun()
        
         # Métricas al final del historial
