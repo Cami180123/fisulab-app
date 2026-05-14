@@ -1180,6 +1180,10 @@ with col_der:
 
     # ── TAB 1: Historial ─────────────────────────────────────
     with tab1:
+        # Métricas al final del historial
+        st.markdown(html_metricas, unsafe_allow_html=True)
+        st.divider()
+        
         st.markdown("")
         if not st.session_state.historial:
             st.caption("Aún no hay casos analizados.")
@@ -1211,11 +1215,12 @@ with col_der:
                     st.session_state.uploader_key    += 1
                     st.rerun()
        
-        # Métricas al final del historial
-        st.markdown(html_metricas, unsafe_allow_html=True)
-
   # ── TAB 2: Estadísticas ───────────────────────────────────
     with tab2:
+
+        # Métricas casos este mes + precisión + tipo frecuente
+        st.markdown(html_metricas, unsafe_allow_html=True)
+        
         if total == 0:
             st.caption("Aún no hay casos analizados.")
         else:
@@ -1269,9 +1274,6 @@ with col_der:
                         f'</div>',
                         unsafe_allow_html=True
                     )
-
-        # Métricas casos este mes + precisión + tipo frecuente
-        st.markdown(html_metricas, unsafe_allow_html=True)
 
         # ── PANEL DE COSTOS —
         ti = st.session_state.get("tokens_info")
