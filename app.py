@@ -833,6 +833,11 @@ Datos del paciente:
                     "nombre":      paciente_id or f"Caso {len(st.session_state.historial)+1}",
                     "fecha":       time.strftime("%d %b %Y"),
                     "complejidad": comp
+                    "clasificacion": datos_ia.get("clasificacion_principal", "No determinada"),
+                    "edad":          paciente_edad or "No especificada",
+                    "sexo":          paciente_sexo,
+                    "resultado":     response.text,
+                    "datos_ia":      datos_ia,
                 })
 
     except Exception as e:
