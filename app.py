@@ -736,7 +736,7 @@ with col_izq:
         imagen_pil = Image.open(imagen_file)
         st.image(imagen_pil, caption="Vista previa", use_container_width=True)
     elif st.session_state.get("imagen_historial"):
-        st.image(st.session_state.imagen_historial, caption="Imagen del caso", use_container_width=True)
+        st.image(io.BytesIO(st.session_state.imagen_historial), caption="Imagen del caso", use_container_width=True)
 
     analizar = st.button(
         "🔬 Analizar con IA",
