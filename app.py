@@ -1220,6 +1220,7 @@ with col_der:
 
         # Métricas casos este mes + precisión + tipo frecuente
         st.markdown(html_metricas, unsafe_allow_html=True)
+        st. divider ()
         
         if total == 0:
             st.caption("Aún no hay casos analizados.")
