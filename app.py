@@ -727,11 +727,14 @@ with col_izq:
         "Cargar imagen",
         type=["jpg", "jpeg", "png", "webp"],
         label_visibility="collapsed"
+        key=f"uploader_{st.session_state.uploader_key}"
     )
 
     if imagen_file:
         imagen_pil = Image.open(imagen_file)
         st.image(imagen_pil, caption="Vista previa", use_container_width=True)
+    elif st.session_state.get("imagen_historial"):
+        st.image(st.session_state.imagen_historial, caption="Imagen del caso", use_container_width=True)
 
     analizar = st.button(
         "🔬 Analizar con IA",
@@ -751,6 +754,8 @@ with col_izq:
         st.session_state.resultado    = None
         st.session_state.datos_paciente = {}
         st.session_state.datos_ia     = {}
+        st.session_state.imagen_historial = None
+        st.session_state.uploader_key       += 1
         st.rerun()
 # ════════════════════════════════════════════════════════════
 # LÓGICA DE ANÁLISIS
@@ -838,6 +843,8 @@ Datos del paciente:
                     "sexo":          paciente_sexo,
                     "resultado":     response.text,
                     "datos_ia":      datos_ia,
+                    "imagen_bytes":  imagen_bytes,
+                    "imagen_mime":   mime_type,
                 })
 
     except Exception as e:
@@ -1197,6 +1204,7 @@ with col_der:
                         "edad": caso.get("edad", "No especificada"),
                         "sexo": caso.get("sexo", "No especificado"),
                     }
+                    st.session_state.imagen_historial = caso.get("imagen_bytes", None)
                     st.rerun()
        
         # Métricas al final del historial
