@@ -724,6 +724,16 @@ col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
 # COLUMNA IZQUIERDA — Solo imagen y botones
 # ════════════════════════════════════════════════════════════
 with col_izq:
+
+    if st.button("🆕 Nuevo paciente", use_container_width=True):
+        st.session_state.resultado    = None
+        st.session_state.datos_paciente = {}
+        st.session_state.datos_ia     = {}
+        st.session_state.imagen_historial = None
+        st.session_state.uploader_key       += 1
+        st.rerun()
+    st.divider ()
+    
     st.markdown("#### 📷 Imagen clínica")
     imagen_file = st.file_uploader(
         "Cargar imagen",
@@ -750,15 +760,6 @@ with col_izq:
     if not imagen_file:
         st.caption("⚠️ Carga una imagen para continuar.")
 
-    st.divider()
-
-    if st.button("🆕 Nuevo paciente", use_container_width=True):
-        st.session_state.resultado    = None
-        st.session_state.datos_paciente = {}
-        st.session_state.datos_ia     = {}
-        st.session_state.imagen_historial = None
-        st.session_state.uploader_key       += 1
-        st.rerun()
 # ════════════════════════════════════════════════════════════
 # LÓGICA DE ANÁLISIS
 # ════════════════════════════════════════════════════════════
