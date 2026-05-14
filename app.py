@@ -832,7 +832,7 @@ Datos del paciente:
                 st.session_state.historial.insert(0, {
                     "nombre":      paciente_id or f"Caso {len(st.session_state.historial)+1}",
                     "fecha":       time.strftime("%d %b %Y"),
-                    "complejidad": comp
+                    "complejidad": comp,
                     "clasificacion": datos_ia.get("clasificacion_principal", "No determinada"),
                     "edad":          paciente_edad or "No especificada",
                     "sexo":          paciente_sexo,
