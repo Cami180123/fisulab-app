@@ -1246,11 +1246,12 @@ with col_der:
                 unsafe_allow_html=True
             )
 
-            st.markdown(
-                barra_stat("Complejidad alta",  altas,  total, "#FCEBEB", "#A32D2D", "#A32D2D") +
-                barra_stat("Complejidad media", medias, total, "#FAEEDA", "#854F0B", "#854F0B") +
-                barra_stat("Complejidad baja",  bajas,  total, "#EAF3DE", "#3B6D11", "#3B6D11"),
-                unsafe_allow_html=True
+            barras_html = ""
+            if altas  > 0: barras_html += barra_stat("Complejidad alta",  altas,  total, "#FCEBEB", "#A32D2D", "#A32D2D")
+            if medias > 0: barras_html += barra_stat("Complejidad media", medias, total, "#FAEEDA", "#854F0B", "#854F0B")
+            if bajas  > 0: barras_html += barra_stat("Complejidad baja",  bajas,  total, "#EAF3DE", "#3B6D11", "#3B6D11")
+            if barras_html:
+                st.markdown(barras_html, unsafe_allow_html=True)
             )
 
             # ── Distribución por tipo de fisura ──────────────────
