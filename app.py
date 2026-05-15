@@ -972,8 +972,6 @@ with col_centro:
                 </div>
                 """, unsafe_allow_html=True)
     
-            st.divider()
-    
             # ── Clasificación diferencial — dinámica, ordenada de mayor a menor ──
             st.markdown("**🔬 Clasificación diferencial**")
     
@@ -1007,9 +1005,7 @@ with col_centro:
                     """, unsafe_allow_html=True)
             else:
                 st.caption("No se encontraron diagnósticos diferenciales en la respuesta.")
-    
-            st.divider()
-    
+       
             # ── Cronograma orientativo — dinámico ─────────────────────────
             st.markdown("**🗓️ Cronograma orientativo de tratamiento**")
             with st.container(height=320, border=False):
@@ -1090,9 +1086,7 @@ with col_centro:
                 {chips_html}
             </div>
             """, unsafe_allow_html=True)
-    
-            st.divider()
-            
+                   
             st.markdown("### 📄 Informe completo")
             with st.container(height=400, border=False):
                 # Limpiar el texto antes de mostrarlo en pantalla,
@@ -1260,8 +1254,7 @@ with col_der:
 
         # Métricas casos este mes + precisión + tipo frecuente
         st.markdown(html_metricas, unsafe_allow_html=True)
-        st. divider ()
-        
+              
         if total == 0:
             st.caption("Aún no hay casos analizados.")
         else:
