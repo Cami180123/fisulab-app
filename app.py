@@ -141,35 +141,42 @@ header     {visibility: hidden;}
 
 /* ── LAYOUT SIN SCROLL GLOBAL ── */
 html, body {
-    overflow: hidden !important;
     height: 100vh !important;
+    overflow: hidden !important;
 }
 
 section[data-testid="stAppViewContainer"] {
-    overflow: hidden !important;
     height: 100vh !important;
+    overflow: hidden !important;
+}
+
+section[data-testid="stAppViewContainer"] > div {
+    height: 100vh !important;
+    overflow: hidden !important;
 }
 
 div.block-container {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0 !important;
+    height: 100vh !important;
     max-height: 100vh !important;
     overflow: hidden !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0 !important;
 }
 
 div[data-testid="column"]:nth-of-type(1),
 div[data-testid="column"]:nth-of-type(2),
 div[data-testid="column"]:nth-of-type(3) {
-    height: calc(100vh - 130px) !important;
+    height: calc(100vh - 140px) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
 }
 
 /* ── MÓVIL ── */
 @media (max-width: 768px) {
-    html, body { overflow: auto !important; }
+    html, body { overflow: auto !important; height: auto !important; }
     section[data-testid="stAppViewContainer"] { height: auto !important; overflow: auto !important; }
     section[data-testid="stAppViewContainer"] > div { height: auto !important; overflow: auto !important; }
+    div.block-container { height: auto !important; max-height: none !important; overflow: auto !important; }
     div[data-testid="column"]:nth-of-type(1),
     div[data-testid="column"]:nth-of-type(2),
     div[data-testid="column"]:nth-of-type(3) {
