@@ -1236,15 +1236,7 @@ with col_der:
                     f'<div style="width:100%;height:7px;background:#e9ecef;border-radius:6px;overflow:hidden;">'
                     f'<div style="width:{pct}%;height:7px;background:{color_bar};border-radius:6px;"></div></div>'
                     f'</div>'
-                )
-
-            st.markdown(
-                f'<div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:12px 14px;margin-bottom:10px;">'
-                f'<div style="font-size:11px;color:#6c757d;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Total de casos analizados</div>'
-                f'<div style="font-size:28px;font-weight:700;color:#085041">{total}</div>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+                )      
 
             barras_html = ""
             if altas  > 0: barras_html += barra_stat("Complejidad alta",  altas,  total, "#FCEBEB", "#A32D2D", "#A32D2D")
