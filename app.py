@@ -141,42 +141,33 @@ header     {visibility: hidden;}
 
 /* ── LAYOUT SIN SCROLL GLOBAL ── */
 html, body {
-    height: 100vh !important;
+    height: 100%;
     overflow: hidden !important;
 }
-
+ 
 section[data-testid="stAppViewContainer"] {
     height: 100vh !important;
     overflow: hidden !important;
 }
-
+ 
 section[data-testid="stAppViewContainer"] > div {
     height: 100vh !important;
     overflow: hidden !important;
 }
-
-div.block-container {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow: hidden !important;
-    padding-top: 0.5rem !important;
-    padding-bottom: 0 !important;
-}
-
+ 
 div[data-testid="column"]:nth-of-type(1),
 div[data-testid="column"]:nth-of-type(2),
 div[data-testid="column"]:nth-of-type(3) {
-    height: calc(100vh - 140px) !important;
+    height: calc(100vh - 120px) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
 }
-
+ 
 /* ── MÓVIL ── */
 @media (max-width: 768px) {
-    html, body { overflow: auto !important; height: auto !important; }
+    html, body { overflow: auto !important; }
     section[data-testid="stAppViewContainer"] { height: auto !important; overflow: auto !important; }
     section[data-testid="stAppViewContainer"] > div { height: auto !important; overflow: auto !important; }
-    div.block-container { height: auto !important; max-height: none !important; overflow: auto !important; }
     div[data-testid="column"]:nth-of-type(1),
     div[data-testid="column"]:nth-of-type(2),
     div[data-testid="column"]:nth-of-type(3) {
@@ -189,7 +180,6 @@ div[data-testid="column"]:nth-of-type(3) {
     .topbar-badge { font-size: 10px; }
     .caso-card { padding: 8px 10px; }
 }
-
 </style>
 """, unsafe_allow_html=True)
 
