@@ -771,9 +771,12 @@ with col_izq:
 
     if imagen_file:
         imagen_pil = Image.open(imagen_file)
-        st.image(imagen_pil, caption="Vista previa", use_container_width=True)
+        imagen_pil.thumbnail((300, 220))
+        st.image(imagen_pil, caption="Vista previa", use_container_width=False, width=280)
     elif st.session_state.get("imagen_historial"):
-        st.image(io.BytesIO(st.session_state.imagen_historial), caption="Imagen del caso", use_container_width=True)
+        img_hist = Image.open(io.BytesIO(st.session_state.imagen_historial))
+        img_hist.thumbnail((300, 220))
+        st.image(img_hist, caption="Imagen del caso", use_container_width=False, width=280)
 
     analizar = st.button(
         "🔬 Analizar con IA",
