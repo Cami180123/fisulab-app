@@ -940,7 +940,9 @@ with col_centro:
             if diferenciales:
                 # Ordena de mayor a menor probabilidad
                 diferenciales_ordenados = sorted(diferenciales, key=lambda x: x["probabilidad"], reverse=True)
-                for d in diferenciales_ordenados:
+                 for d in diferenciales_ordenados:
+                    if d["probabilidad"] == 0:
+                        continue
                     nombre    = d["nombre"]
                     prob      = d["probabilidad"]
                     pct_float = max(0.0, min(1.0, prob / 100))
