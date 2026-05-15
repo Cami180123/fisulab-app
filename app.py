@@ -1252,8 +1252,7 @@ with col_der:
             if bajas  > 0: barras_html += barra_stat("Complejidad baja",  bajas,  total, "#EAF3DE", "#3B6D11", "#3B6D11")
             if barras_html:
                 st.markdown(barras_html, unsafe_allow_html=True)
-            )
-
+            
             # ── Distribución por tipo de fisura ──────────────────
             if conteo_tipos:
                 st.markdown(
