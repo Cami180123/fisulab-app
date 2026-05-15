@@ -761,7 +761,7 @@ with col_izq:
 
     st.markdown("<hr style='margin:4px 0; border-color:#e9ecef;'>", unsafe_allow_html=True)
     
-    st.markdown("## 📷 Imagen clínica")
+    st.markdown("📷 Imagen clínica")
     imagen_file = st.file_uploader(
         "Cargar imagen",
         type=["jpg", "jpeg", "png", "webp"],
@@ -1229,6 +1229,7 @@ with col_der:
                 "media": '<span class="badge-media">Complejidad media</span>',
                 "baja":  '<span class="badge-baja">Complejidad baja</span>',
             }
+        with st.container(height=400):
             for i, caso in enumerate(st.session_state.historial[:8]):
                 badge = badge_map.get(caso["complejidad"], "")
                 nombre_h = caso['nombre']
