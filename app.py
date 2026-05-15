@@ -759,9 +759,8 @@ with col_izq:
     with f_sexo:
         paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
 
-    st.divider()
+    st.markdown("<hr style='margin:4px 0; border-color:#e9ecef;'>", unsafe_allow_html=True)
     
-
     st.markdown("#### 📷 Imagen clínica")
     imagen_file = st.file_uploader(
         "Cargar imagen",
@@ -788,7 +787,7 @@ with col_izq:
     if not imagen_file:
         st.caption("⚠️ Carga una imagen para continuar.")
 
-    st.divider ()
+    st.markdown("<hr style='margin:4px 0; border-color:#e9ecef;'>", unsafe_allow_html=True)
  
     if st.button("🆕 Nuevo paciente", use_container_width=True):
         st.session_state.resultado    = None
