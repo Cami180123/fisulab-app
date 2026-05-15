@@ -83,15 +83,16 @@ div.block-container > div:first-child {
     background: #f8f9fa;
     border: 1px solid #e9ecef;
     border-radius: 10px;
-    padding: 16px 20px;
+    padding: 12px 14px;
     text-align: center;
-    height: 160px;
+    min-height: 110px;
+    height: auto;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
-.metric-value { font-size: 26px; font-weight: 700; color: #085041; }
-.metric-label { font-size: 12px; color: #6c757d; margin-top: 4px; }
+.metric-value { font-size: 22px; font-weight: 700; color: #085041; }
+.metric-label { font-size: 11px; color: #6c757d; margin-top: 2px; }
 
 /* ── BADGES DE COMPLEJIDAD ── */
 .badge-alta {
@@ -138,26 +139,48 @@ div.block-container > div:first-child {
 footer     {visibility: hidden;}
 header     {visibility: hidden;}
 
-/* ── FULLSCREEN LAYOUT WITHOUT GLOBAL SCROLL ── */
+/* ── FULLSCREEN LAYOUT SIN SCROLL GLOBAL ── */
 html, body {
     height: 100%;
-    overflow: hidden;
+    overflow: hidden !important;
 }
 
 section[data-testid="stAppViewContainer"] {
-    height: 100vh;
+    height: 100vh !important;
+    overflow: hidden !important;
 }
 
 section[data-testid="stAppViewContainer"] > div {
-    height: 100vh;
+    height: 100vh !important;
+    overflow: hidden !important;
 }
 
 div[data-testid="column"]:nth-of-type(1),
 div[data-testid="column"]:nth-of-type(2),
 div[data-testid="column"]:nth-of-type(3) {
-    height: calc(100vh - 110px);
-    overflow-y: auto;
+    height: calc(100vh - 120px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
+
+/* ── MÓVIL ── */
+@media (max-width: 768px) {
+    html, body { overflow: auto !important; }
+    section[data-testid="stAppViewContainer"] { height: auto !important; overflow: auto !important; }
+    section[data-testid="stAppViewContainer"] > div { height: auto !important; overflow: auto !important; }
+    div[data-testid="column"]:nth-of-type(1),
+    div[data-testid="column"]:nth-of-type(2),
+    div[data-testid="column"]:nth-of-type(3) {
+        height: auto !important;
+        overflow-y: visible !important;
+    }
+    .metric-card { min-height: 80px; padding: 10px; }
+    .metric-value { font-size: 18px; }
+    .topbar { flex-direction: column; gap: 8px; align-items: flex-start; padding: 10px 14px; }
+    .topbar-badge { font-size: 10px; }
+    .caso-card { padding: 8px 10px; }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -704,18 +727,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── FILA DATOS DEL PACIENTE ───────
-st.markdown("<div style='margin-top:2px'></div>", unsafe_allow_html=True)
-f_id, f_edad, f_sexo = st.columns([2.2, 0.85, 1.05])
-with f_id:
-    paciente_id   = st.text_input("👤 Nombre / ID", placeholder="Paciente 2024-112")
-with f_edad:
-    paciente_edad = st.text_input("Edad", placeholder="Ej: 3 meses")
-with f_sexo:
-    paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
-
-st.divider()
-
 # ── LAYOUT PRINCIPAL —
 col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
 
@@ -725,15 +736,18 @@ col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
 # ════════════════════════════════════════════════════════════
 with col_izq:
 
-    if st.button("🆕 Nuevo paciente", use_container_width=True):
-        st.session_state.resultado    = None
-        st.session_state.datos_paciente = {}
-        st.session_state.datos_ia     = {}
-        st.session_state.imagen_historial = None
-        st.session_state.uploader_key       += 1
-        st.rerun()
-    st.divider ()
+    # ── FILA DATOS DEL PACIENTE ───────
+    st.markdown("#### 👤 Nombre / ID")
+    paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112", label_visibility="collapsed")
+    f_edad, f_sexo = st.columns([1, 1])
+    with f_edad:
+        paciente_edad = st.text_input("Edad", placeholder="EJ: 3 meses")
+    with f_sexo:
+        paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
+
+    st.divider()
     
+
     st.markdown("#### 📷 Imagen clínica")
     imagen_file = st.file_uploader(
         "Cargar imagen",
@@ -759,6 +773,16 @@ with col_izq:
         st.caption("⚠️ API Key no configurada.")
     if not imagen_file:
         st.caption("⚠️ Carga una imagen para continuar.")
+
+    st.divider ()
+ 
+    if st.button("🆕 Nuevo paciente", use_container_width=True):
+        st.session_state.resultado    = None
+        st.session_state.datos_paciente = {}
+        st.session_state.datos_ia     = {}
+        st.session_state.imagen_historial = None
+        st.session_state.uploader_key       += 1
+        st.rerun()
 
 # ════════════════════════════════════════════════════════════
 # LÓGICA DE ANÁLISIS
@@ -1083,7 +1107,7 @@ with col_centro:
     
         st.divider ()
         # Botones de acción
-        b1, b2, b3 = st.columns(3)
+        b1, b2 = st.columns(3)
             
         with b1:
             st.download_button(
@@ -1098,10 +1122,7 @@ with col_centro:
             if st.button("🔄 Nuevo análisis", use_container_width=True):
                 st.session_state.resultado = None
                 st.rerun()
-        with b3:
-            st.button("💾 Guardar en sistema", use_container_width=True, disabled=True,
-                        help="Función de integración con base de datos — próximamente") 
-    
+        
         # ── Disclaimer ético ─────────────────────────
         st.markdown("""
         <div class="disclaimer">
