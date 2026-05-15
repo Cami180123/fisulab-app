@@ -751,7 +751,7 @@ col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
 with col_izq:
 
     # ── FILA DATOS DEL PACIENTE ───────
-    st.markdown("#### 👤 Nombre / ID")
+    st.markdown("👤 Nombre / ID")
     paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112", label_visibility="collapsed")
     f_edad, f_sexo = st.columns([1, 1])
     with f_edad:
@@ -761,7 +761,7 @@ with col_izq:
 
     st.markdown("<hr style='margin:4px 0; border-color:#e9ecef;'>", unsafe_allow_html=True)
     
-    st.markdown("#### 📷 Imagen clínica")
+    st.markdown("## 📷 Imagen clínica")
     imagen_file = st.file_uploader(
         "Cargar imagen",
         type=["jpg", "jpeg", "png", "webp"],
