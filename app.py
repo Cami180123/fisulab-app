@@ -1107,7 +1107,7 @@ with col_centro:
     
         st.divider ()
         # Botones de acción
-        b1, b2 = st.columns(3)
+        b1, b2 = st.columns(2)
             
         with b1:
             st.download_button(
