@@ -770,15 +770,40 @@ with col_izq:
         key=f"uploader_{st.session_state.uploader_key}"
     )
 
-with st.container(height=190, border=False):
+    # ── PREVISUALIZACIÓN CON TAMAÑO FIJO VÍA HTML ────────────
+    img_src = ""
     if imagen_file:
         imagen_pil = Image.open(imagen_file)
         imagen_pil.thumbnail((260, 175))
-        st.image(imagen_pil, caption="Vista previa", use_container_width=False, width=240)
+        buf = io.BytesIO()
+        imagen_pil.save(buf, format="PNG")
+        img_src = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+        caption = "Vista previa"
     elif st.session_state.get("imagen_historial"):
         img_hist = Image.open(io.BytesIO(st.session_state.imagen_historial))
         img_hist.thumbnail((260, 175))
-        st.image(img_hist, caption="Imagen del caso", use_container_width=False, width=240)
+        buf = io.BytesIO()
+        img_hist.save(buf, format="PNG")
+        img_src = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+        caption = "Imagen del caso"
+
+    if img_src:
+        st.markdown(f"""
+        <div style="height:175px;overflow:hidden;border-radius:8px;
+                    border:1px solid #e9ecef;margin-bottom:6px;
+                    display:flex;align-items:center;justify-content:center;background:#f8f9fa;">
+            <img src="{img_src}" style="max-height:175px;max-width:100%;object-fit:contain;">
+        </div>
+        <div style="font-size:11px;color:#6c757d;text-align:center;margin-bottom:4px;">{caption}</div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="height:175px;border-radius:8px;border:1px dashed #dee2e6;
+                    display:flex;align-items:center;justify-content:center;
+                    background:#f8f9fa;margin-bottom:6px;">
+            <span style="font-size:12px;color:#adb5bd;">Sin imagen cargada</span>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("<hr style='margin:4px 0; border-color:#e9ecef;'>", unsafe_allow_html=True)
 
