@@ -805,8 +805,6 @@ with col_izq:
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<hr style='margin:4px 0; border-color:#e9ecef;'>", unsafe_allow_html=True)
-
     # ── BOTONES SIEMPRE VISIBLES ─────────────────────────────
     analizar = st.button(
         "🔬 Analizar con IA",
@@ -820,8 +818,6 @@ with col_izq:
     if not imagen_file:
         st.caption("⚠️ Carga una imagen para continuar.")
 
-    st.markdown("<hr style='margin:4px 0; border-color:#e9ecef;'>", unsafe_allow_html=True)
- 
     if st.button("🆕 Nuevo paciente", use_container_width=True):
         st.session_state.resultado    = None
         st.session_state.datos_paciente = {}
@@ -1146,7 +1142,6 @@ with col_centro:
             cronograma,
         )
     
-        st.divider ()
         # Botones de acción
         b1, b2 = st.columns(2)
             
