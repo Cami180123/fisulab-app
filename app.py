@@ -762,8 +762,7 @@ with col_izq:
 
     # ── FILA DATOS DEL PACIENTE ───────
     st.markdown("<div style='padding-top:8px'></div>", unsafe_allow_html=True)
-    "Nombre / ID"
-    paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112", label_visibility="collapsed")
+    paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112")
     f_edad, f_sexo = st.columns([1, 1])
     with f_edad:
         paciente_edad = st.text_input("Edad", placeholder="EJ: 3 meses")
