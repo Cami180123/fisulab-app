@@ -50,7 +50,7 @@ section[data-testid="stAppViewContainer"] > div {
 }
 
 div.block-container {
-    padding-top: 0.5rem !important;
+    padding-top: 0.3rem !important;
 }
 
 div.block-container > div:first-child {
@@ -1230,7 +1230,7 @@ with col_der:
     # ── TAB 1: Historial ─────────────────────────────────────
     with tab1:
 
-        st.markdown("")
+        st.markdown("<div style='margin-top:-12px'></div>", unsafe_allow_html=True)
         if not st.session_state.historial:
             st.caption("Aún no hay casos analizados.")
         else:
