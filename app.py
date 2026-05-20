@@ -733,14 +733,14 @@ st.markdown(f"""
     <div style="display:flex; align-items:center; gap:14px;">
         {logo_html}
         <div>
-            <div class="topbar-title">FISULAB · IA Clínica</div>
+            <div class="topbar-title">FISULAB · IA de apoyo clínico</div>
             <div class="topbar-sub">Apoyo diagnóstico — labio y paladar hendido</div>
         </div>
     </div>
     <div style="text-align:right;">
-        <div class="topbar-badge">⚠️ Este sistema es experimental. No usar como único criterio de diagnóstico.</div>
-        <div style="font-size:10px;color:#adb5bd;margin-top:4px;">
-            Proyecto académico · Datos e IA · 2026 · 
+        <div class="topbar-badge">⚠️ Este sistema es experimental. No usar como único criterio de diagnóstico</div>
+        <div style="font-size:12px;color:#adb5bd;margin-top:4px;">
+            Proyecto académico — Datos e Inteligencia Artifical (IA) · 2026 · 
             <span style="color:#dc3545;">Sistema experimental</span>
         </div>
     </div>
