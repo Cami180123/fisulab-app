@@ -1230,7 +1230,7 @@ with col_der:
     # ── TAB 1: Historial ─────────────────────────────────────
     with tab1:
 
-        st.markdown("<div style='margin-top:-12px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top:-15px'></div>", unsafe_allow_html=True)
         if not st.session_state.historial:
             st.caption("Aún no hay casos analizados.")
         else:
@@ -1280,8 +1280,6 @@ with col_der:
         # Métricas casos este mes + precisión + tipo frecuente
         st.markdown(html_metricas, unsafe_allow_html=True)
               
-        if total == 0:
-            st.caption("Aún no hay casos analizados.")
         else:
             # ── Barras de complejidad con porcentajes reales ──────
             def barra_stat(label, valor, total, color_bg, color_bar, color_txt):
