@@ -1164,8 +1164,9 @@ with col_der:
     if casos_mes == 0:
         casos_mes = total  # fallback: si no coincide el formato, muestra total
 
-    # Precisión validada (referencia estática hasta integrar módulo de validación real)
-    precision = 89
+    # Confianza promedio real de los casos analizados
+    confianzas = [c.get("datos_ia", {}).get("confianza_principal", 0) for c in st.session_state.historial if c.get("datos_ia")]
+    precision  = round(sum(confianzas) / len(confianzas)) if confianzas else 0
 
     # Tipo más frecuente de fisura — viene del campo "clasificacion" guardado en historial
     conteo_tipos = {}
@@ -1179,8 +1180,8 @@ with col_der:
         # Abreviar el nombre para que quepa en el panel estrecho
         tipo_top_corto = tipo_top.replace("Labio Leporino", "LL").replace("Labio y Paladar Hendido", "LPH")
     else:
-        tipo_top_corto = "LL Unilateral"
-        tipo_top_pct   = 58  # valor de referencia mientras no haya datos reales
+        tipo_top_corto = "Sin datos aún"
+        tipo_top_pct   = 0  # valor de referencia mientras no haya datos reales
 
     # HTML de las métricas (mismo bloque reutilizado en ambas tabs)
     html_metricas = f"""
@@ -1197,7 +1198,7 @@ with col_der:
                         padding:10px 8px;text-align:center;">
                 <div style="font-size:22px;font-weight:700;color:#185FA5;">{precision}%</div>
                 <div style="font-size:10px;color:#6c757d;margin-top:2px;line-height:1.3;">
-                    Precisión validada
+                    Confianza promedio IA
                 </div>
             </div>
         </div>
