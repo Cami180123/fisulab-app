@@ -134,6 +134,11 @@ div.block-container > div:first-child {
 .caso-nombre { font-size: 13px; font-weight: 600; color: #212529; }
 .caso-fecha  { font-size: 11px; color: #6c757d; }
 
+/* Alinear contenido superior de columnas */
+div[data-testid="column"] {
+    padding-top: 0 !important;
+}
+
 /* ── OCULTAR ELEMENTOS DE STREAMLIT ── */
 #MainMenu {visibility: hidden;}
 footer     {visibility: hidden;}
@@ -756,7 +761,6 @@ col_izq, col_centro, col_der = st.columns([1.2, 2.6, 1.2])
 with col_izq:
 
     # ── FILA DATOS DEL PACIENTE ───────
-    st.markdown("👤 Nombre / ID")
     paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112", label_visibility="collapsed")
     f_edad, f_sexo = st.columns([1, 1])
     with f_edad:
