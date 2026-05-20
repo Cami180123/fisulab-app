@@ -738,7 +738,7 @@ st.markdown(f"""
         </div>
     </div>
     <div style="text-align:right;">
-        <div class="topbar-badge">⚠️ No reemplaza un diagnóstico médico profesional</div>
+        <div class="topbar-badge">⚠️ Este sistema es experimental. No usar como único criterio de diagnóstico.</div>
         <div style="font-size:10px;color:#adb5bd;margin-top:4px;">
             Proyecto académico · Datos e IA · 2026 · 
             <span style="color:#dc3545;">Sistema experimental</span>
