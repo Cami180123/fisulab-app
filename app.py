@@ -760,7 +760,8 @@ with col_izq:
         paciente_sexo = st.selectbox("Sexo", ["No especificado", "Femenino", "Masculino"])
 
     st.markdown("<hr style='margin:4px 0; border-color:#e9ecef;'>", unsafe_allow_html=True)
-    
+
+    # ── IMAGEN EN CONTENEDOR FIJO ────────────────────────────
     st.markdown("📷 Imagen clínica")
     imagen_file = st.file_uploader(
         "Cargar imagen",
@@ -768,15 +769,20 @@ with col_izq:
         label_visibility="collapsed",
         key=f"uploader_{st.session_state.uploader_key}"
     )
+
+with st.container(height=190, border=False):
     if imagen_file:
         imagen_pil = Image.open(imagen_file)
-        imagen_pil.thumbnail((260, 180))
+        imagen_pil.thumbnail((260, 175))
         st.image(imagen_pil, caption="Vista previa", use_container_width=False, width=240)
     elif st.session_state.get("imagen_historial"):
         img_hist = Image.open(io.BytesIO(st.session_state.imagen_historial))
-        img_hist.thumbnail((260, 180))
+        img_hist.thumbnail((260, 175))
         st.image(img_hist, caption="Imagen del caso", use_container_width=False, width=240)
 
+    st.markdown("<hr style='margin:4px 0; border-color:#e9ecef;'>", unsafe_allow_html=True)
+
+    # ── BOTONES SIEMPRE VISIBLES ─────────────────────────────
     analizar = st.button(
         "🔬 Analizar con IA",
         use_container_width=True,
