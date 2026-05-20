@@ -1241,7 +1241,7 @@ with col_der:
             "media": '<span class="badge-media">Complejidad media</span>',
             "baja":  '<span class="badge-baja">Complejidad baja</span>',
         }
-         with st.container(height=400):
+        with st.container(height=400):
             if not st.session_state.historial:
                 st.markdown("""
                 <div style="height:100%;display:flex;align-items:center;
