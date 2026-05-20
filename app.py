@@ -1279,7 +1279,10 @@ with col_der:
 
         # Métricas casos este mes + precisión + tipo frecuente
         st.markdown(html_metricas, unsafe_allow_html=True)
-              
+
+        if total == 0:
+            st.caption("Aún no hay casos analizados.")
+        else:
             # ── Barras de complejidad con porcentajes reales ──────
             def barra_stat(label, valor, total, color_bg, color_bar, color_txt):
                 pct = round((valor / total) * 100) if total > 0 else 0
