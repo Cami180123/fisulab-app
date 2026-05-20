@@ -1235,37 +1235,43 @@ with col_der:
     # ── TAB 1: Historial ─────────────────────────────────────
     with tab1:
 
-        st.markdown("<div style='margin-top:-15px'></div>", unsafe_allow_html=True)
-        if not st.session_state.historial:
-            st.caption("Aún no hay casos analizados.")
-        else:
-            badge_map = {
-                "alta":  '<span class="badge-alta">Complejidad alta</span>',
-                "media": '<span class="badge-media">Complejidad media</span>',
-                "baja":  '<span class="badge-baja">Complejidad baja</span>',
-            }
-        with st.container(height=400):
-            for i, caso in enumerate(st.session_state.historial[:8]):
-                badge = badge_map.get(caso["complejidad"], "")
-                nombre_h = caso['nombre']
-                fecha_h  = caso['fecha']
-                st.markdown(
-                    f'<div class="caso-card"><div class="caso-nombre">🗂️ {nombre_h}</div>'
-                    f'<div class="caso-fecha">📅 {fecha_h}</div>'
-                    f'<div style="margin-top:6px">{badge}</div></div>',
-                    unsafe_allow_html=True
-                )
-                if st.button("📂 Ver caso", key=f"cargar_caso_{i}", use_container_width=True):
-                    st.session_state.resultado      = caso.get("resultado", None)
-                    st.session_state.datos_ia       = caso.get("datos_ia", {})
-                    st.session_state.datos_paciente = {
-                        "id":   caso.get("nombre", ""),
-                        "edad": caso.get("edad", "No especificada"),
-                        "sexo": caso.get("sexo", "No especificado"),
-                    }
-                    st.session_state.imagen_historial = caso.get("imagen_bytes", None)
-                    st.session_state.uploader_key    += 1
-                    st.rerun()
+        st.markdown("<div style='margin-top:-20px'></div>", unsafe_allow_html=True)
+        badge_map = {
+            "alta":  '<span class="badge-alta">Complejidad alta</span>',
+            "media": '<span class="badge-media">Complejidad media</span>',
+            "baja":  '<span class="badge-baja">Complejidad baja</span>',
+        }
+         with st.container(height=400):
+            if not st.session_state.historial:
+                st.markdown("""
+                <div style="height:100%;display:flex;align-items:center;
+                            justify-content:center;color:#adb5bd;font-size:13px;
+                            text-align:center;padding:20px;">
+                    📂 Aún no hay casos analizados
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                for i, caso in enumerate(st.session_state.historial[:50]):
+                    badge = badge_map.get(caso["complejidad"], "")
+                    nombre_h = caso['nombre']
+                    fecha_h  = caso['fecha']
+                    st.markdown(
+                        f'<div class="caso-card"><div class="caso-nombre">🗂️ {nombre_h}</div>'
+                        f'<div class="caso-fecha">📅 {fecha_h}</div>'
+                        f'<div style="margin-top:6px">{badge}</div></div>',
+                        unsafe_allow_html=True
+                    )
+                    if st.button("📂 Ver caso", key=f"cargar_caso_{i}", use_container_width=True):
+                        st.session_state.resultado      = caso.get("resultado", None)
+                        st.session_state.datos_ia       = caso.get("datos_ia", {})
+                        st.session_state.datos_paciente = {
+                            "id":   caso.get("nombre", ""),
+                            "edad": caso.get("edad", "No especificada"),
+                            "sexo": caso.get("sexo", "No especificado"),
+                        }
+                        st.session_state.imagen_historial = caso.get("imagen_bytes", None)
+                        st.session_state.uploader_key    += 1
+                        st.rerun()
 
  # ── Disclaimer ético ─────────────────────────
         st.markdown("""
