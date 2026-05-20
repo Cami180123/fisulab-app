@@ -1023,13 +1023,12 @@ with col_centro:
                             cantidad_html = ""
         
                         # Construir HTML del paso como string Python — sin f-string anidado para el objetivo
-                        # num_circulo = f'<div style="min-width:28px;height:28px;border-radius:50%;background:{color}20;border:1.5px solid {color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{color};flex-shrink:0;margin-top:2px;">{i+1}</div>'
                         num_int     = f' <span style="font-size:11px;font-weight:500;color:#6c757d;background:#f1f3f5;padding:2px 8px;border-radius:12px;margin-left:6px;">{cantidad_texto} intervenciones</span>' if cantidad_texto else ""
                         titulo      = f'<div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">{paso["procedimiento"]}{num_int}</div>'
-                        # titulo      = f'<div style="font-size:14px;font-weight:700;color:#212529;line-height:1.3;">{paso["procedimiento"]}</div>'
                         edad_div    = f'<div style="font-size:12px;color:{color};font-weight:600;margin-top:3px;">📅 {paso["edad"]}</div>'
                         objetivo_div= f'<div style="font-size:12px;color:#6c757d;margin-top:5px;line-height:1.5;">🎯 {paso["objetivo"]}</div>'
                         contenido   = f'<div style="border-left:3px solid {color};padding-left:12px;flex:1;">{titulo}{edad_div}{objetivo_div}</div>'
+                        num_circulo = f'<div style="min-width:28px;height:28px;border-radius:50%;background:{color}20;border:1.5px solid {color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{color};flex-shrink:0;margin-top:2px;">{i+1}</div>'
                         html_paso   = f'<div style="display:flex;gap:14px;margin-bottom:14px;">{num_circulo}{contenido}</div>'
                         st.markdown(html_paso, unsafe_allow_html=True)
                 else:
