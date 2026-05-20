@@ -768,7 +768,6 @@ with col_izq:
         label_visibility="collapsed",
         key=f"uploader_{st.session_state.uploader_key}"
     )
-with st.container(height=200, border=False):
     if imagen_file:
         imagen_pil = Image.open(imagen_file)
         imagen_pil.thumbnail((260, 180))
