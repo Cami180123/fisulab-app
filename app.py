@@ -768,15 +768,15 @@ with col_izq:
         label_visibility="collapsed",
         key=f"uploader_{st.session_state.uploader_key}"
     )
-
+with st.container(height=200, border=False):
     if imagen_file:
         imagen_pil = Image.open(imagen_file)
-        imagen_pil.thumbnail((300, 220))
-        st.image(imagen_pil, caption="Vista previa", use_container_width=False, width=280)
+        imagen_pil.thumbnail((260, 180))
+        st.image(imagen_pil, caption="Vista previa", use_container_width=False, width=240)
     elif st.session_state.get("imagen_historial"):
         img_hist = Image.open(io.BytesIO(st.session_state.imagen_historial))
-        img_hist.thumbnail((300, 220))
-        st.image(img_hist, caption="Imagen del caso", use_container_width=False, width=280)
+        img_hist.thumbnail((260, 180))
+        st.image(img_hist, caption="Imagen del caso", use_container_width=False, width=240)
 
     analizar = st.button(
         "🔬 Analizar con IA",
@@ -1134,18 +1134,6 @@ with col_centro:
                 st.session_state.resultado = None
                 st.rerun()
         
-        # ── Disclaimer ético ─────────────────────────
-        st.markdown("""
-        <div class="disclaimer">
-            <strong>⚠️ Aviso importante:</strong>
-            Este análisis es una orientación de apoyo generada por Inteligencia Artificial, basada exclusivamente
-            en el ánalisis de imágenes fotográficas. No constituye un diagnóstico medico definitivo. La clasificación y el plan de tratamiento deben ser validados
-            mediante evaluación clínica presencial completa por el equipo clínico multidisciplinar de FISULAB. El modelo puede presentar limitaciones según
-            la calidad, ángulo e iluminación de la imagen proporcionada.
-            
-        </div>
-        """, unsafe_allow_html=True)
-
 # ════════════════════════════════════════════════════════════
 # COLUMNA DERECHA — Historial y estadísticas
 # ════════════════════════════════════════════════════════════
@@ -1247,7 +1235,20 @@ with col_der:
                     st.session_state.imagen_historial = caso.get("imagen_bytes", None)
                     st.session_state.uploader_key    += 1
                     st.rerun()
-       
+
+ # ── Disclaimer ético ─────────────────────────
+        st.markdown("""
+        <div class="disclaimer">
+            <strong>⚠️ Aviso importante:</strong>
+            Este análisis es una orientación de apoyo generada por Inteligencia Artificial, basada exclusivamente
+            en el ánalisis de imágenes fotográficas. No constituye un diagnóstico medico definitivo. La clasificación y el plan de tratamiento deben ser validados
+            mediante evaluación clínica presencial completa por el equipo clínico multidisciplinar de FISULAB. El modelo puede presentar limitaciones según
+            la calidad, ángulo e iluminación de la imagen proporcionada.
+            
+        </div>
+        """, unsafe_allow_html=True)
+
+    
   # ── TAB 2: Estadísticas ───────────────────────────────────
     with tab2:
 
