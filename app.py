@@ -761,6 +761,7 @@ col_izq, col_centro, col_der = st.columns([1.2, 2.6, 1.2])
 with col_izq:
 
     # ── FILA DATOS DEL PACIENTE ───────
+    "Nombre / ID"
     paciente_id   = st.text_input("Nombre / ID", placeholder="Paciente 2024-112", label_visibility="collapsed")
     f_edad, f_sexo = st.columns([1, 1])
     with f_edad:
