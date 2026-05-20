@@ -818,14 +818,6 @@ with col_izq:
     if not imagen_file:
         st.caption("⚠️ Carga una imagen para continuar.")
 
-    if st.button("🆕 Nuevo paciente", use_container_width=True):
-        st.session_state.resultado    = None
-        st.session_state.datos_paciente = {}
-        st.session_state.datos_ia     = {}
-        st.session_state.imagen_historial = None
-        st.session_state.uploader_key       += 1
-        st.rerun()
-
 # ════════════════════════════════════════════════════════════
 # LÓGICA DE ANÁLISIS
 # ════════════════════════════════════════════════════════════
@@ -1155,9 +1147,13 @@ with col_centro:
             )
     
         with b2:
-            if st.button("🔄 Nuevo análisis", use_container_width=True):
-                st.session_state.resultado = None
-                st.rerun()
+            if st.button("🆕 Nuevo paciente", use_container_width=True):
+                st.session_state.resultado    = None
+                st.session_state.datos_paciente = {}
+                st.session_state.datos_ia     = {}
+                st.session_state.imagen_historial = None
+                st.session_state.uploader_key       += 1
+                st.rerun()    
         
 # ════════════════════════════════════════════════════════════
 # COLUMNA DERECHA — Historial y estadísticas
