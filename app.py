@@ -737,12 +737,18 @@ st.markdown(f"""
             <div class="topbar-sub">Apoyo diagnóstico — labio y paladar hendido</div>
         </div>
     </div>
-    <div class="topbar-badge">⚠️ No reemplaza un diagnóstico médico profesional</div>
+    <div style="text-align:right;">
+        <div class="topbar-badge">⚠️ No reemplaza un diagnóstico médico profesional</div>
+        <div style="font-size:10px;color:#adb5bd;margin-top:4px;">
+            Proyecto académico · Datos e IA · 2026 · 
+            <span style="color:#dc3545;">Sistema experimental</span>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ── LAYOUT PRINCIPAL —
-col_izq, col_centro, col_der = st.columns([1.1, 2.6, 1.1])
+col_izq, col_centro, col_der = st.columns([1.2, 2.6, 1.2])
 
 
 # ════════════════════════════════════════════════════════════
