@@ -1267,10 +1267,9 @@ with col_der:
         st.markdown("""
         <div class="disclaimer">
             <strong>⚠️ Aviso importante:</strong>
-            Este análisis es una orientación de apoyo generada por Inteligencia Artificial, basada exclusivamente
-            en el ánalisis de imágenes fotográficas. No constituye un diagnóstico medico definitivo. La clasificación y el plan de tratamiento deben ser validados
-            mediante evaluación clínica presencial completa por el equipo clínico multidisciplinar de FISULAB. El modelo puede presentar limitaciones según
-            la calidad, ángulo e iluminación de la imagen proporcionada.
+            Este resultado es solo una orientación de apoyo, generada por Inteligencia Artificial, a partir del análisis de imágenes fotográficas.
+            No es un diagnóstico médico definitivo. Cualquier diagnóstico o tratamiento debe ser confirmado por el equipo de salud de FISULAB, mediante una evaluación clínica presencial.
+            La información puede tener limitaciones, ya que depende de la calidad, el ángulo y la iluminación de la imagen enviada.
             
         </div>
         """, unsafe_allow_html=True)
