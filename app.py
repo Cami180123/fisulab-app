@@ -741,7 +741,6 @@ st.markdown(f"""
         <div class="topbar-badge">⚠️ Este sistema es experimental. No usar como único criterio de diagnóstico</div>
         <div style="font-size:12px;color:#adb5bd;margin-top:4px;">
             Proyecto académico — Datos e Inteligencia Artifical (IA) · 2026 · 
-            <span style="color:#dc3545;">Sistema experimental</span>
         </div>
     </div>
 </div>
