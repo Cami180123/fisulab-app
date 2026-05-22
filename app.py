@@ -627,9 +627,12 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
             pdf.ln(2)
             continue
 
-        linea_upper = linea_strip.upper().replace(".", "").replace(":", "")
-        es_titulo = any(t in linea_upper for t in secciones_titulos) and len(linea_strip) < 80
+        linea_upper = linea_strip.upper().replace(".", "").replace(":", "").replace("#", "").replace("*", "").strip()
 
+        es_titulo = any(t in linea_upper for t in secciones_titulos) and len(linea_strip) < 80
+        es_tabla = linea_strip.startswith("|") and linea_strip.endswith("|")
+        es_separador_tabla = es_tabla and all(c in "|- :" for c in linea_strip)
+        
         if es_titulo:
             pdf.ln(2)
             pdf.set_font("Arial", "B", 10)
@@ -662,7 +665,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.set_xy(19, av_y + 3)
     pdf.set_font("Arial", "B", 8)
     pdf.set_text_color(*AMBER)
-    pdf.cell(0, 5, limpiar("⚠  AVISO IMPORTANTE"), ln=True)
+    pdf.cell(0, 5, limpiar("! AVISO IMPORTANTE"), ln=True)
     pdf.set_x(19)
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(80, 50, 0)
