@@ -524,7 +524,10 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
         pdf.set_xy(x + 3, by + 22)
         pdf.set_font("Arial", "I", 7)
         pdf.set_text_color(*GRIS_MED)
-        pdf.cell(bw - 6, 4, limpiar(subtitulo), ln=True)
+        x_actual = pdf.get_x()
+        y_actual = pdf.get_y()
+        pdf.multi_cell(bw - 6, 4, limpiar(subtitulo))
+        pdf.set_xy(x + bw, y_actual)
 
     bloque(15,           "Clasificación probable", clasificacion,         limpiar(sistema) or "Veau / Kernahan",
            (232,245,238), VERDE,     VERDE_OSC)
@@ -783,7 +786,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.set_xy(19, av_y + 3)
     pdf.set_font("Arial", "B", 8)
     pdf.set_text_color(*AMBER)
-    pdf.cell(0, 5, limpiar("! AVISO IMPORTANTE"), ln=True)
+    pdf.cell(0, 5, limpiar("AVISO IMPORTANTE"), ln=True)
     pdf.set_x(19)
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(80, 50, 0)
