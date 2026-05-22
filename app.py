@@ -627,22 +627,23 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
 
                
     # ── PÁGINA 2 — ANÁLISIS DETALLADO DE LA IA ────────────────────
-    # Solo agrega nueva página si hay texto que renderizar
     if texto_limpio.strip():
-    # ── ANÁLISIS DETALLADO — continúa en la misma página si hay espacio
-    # Solo fuerza nueva página si queda muy poco espacio (menos de 60mm)
-    if pdf.get_y() > 220:
-        pdf.add_page()
-    else:
-        pdf.ln(8)
-         
-    pdf.set_font("Arial", "B", 11)
-    pdf.set_text_color(*VERDE_OSC)
-    pdf.cell(0, 7, limpiar("4.  Análisis Clínico Detallado"), ln=True)
-    pdf.set_draw_color(*VERDE)
-    pdf.set_line_width(0.4)
-    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
-    pdf.ln(4)
+        # ── ANÁLISIS DETALLADO — continúa en la misma página si hay espacio
+        if pdf.get_y() > 220:
+            pdf.add_page()
+        else:
+            pdf.ln(8)
+    
+        pdf.set_font("Arial", "B", 11)
+        pdf.set_text_color(*VERDE_OSC)
+        pdf.cell(0, 7, limpiar("4. Análisis Clínico Detallado"), ln=True)
+    
+        pdf.set_draw_color(*VERDE)
+        pdf.set_line_width(0.4)
+        pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+        pdf.ln(4)
+    
+        # (todo el resto del bloque también debe ir indentado)
 
     # Renderizar el texto limpio sección por sección
     secciones_titulos = [
