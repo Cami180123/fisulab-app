@@ -355,7 +355,7 @@ def limpiar(texto):
 
 def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
                 clasificacion="No determinada", complejidad="N/D",
-                confianza_modelo=0, cronograma=None, sistema="", diferenciales=None):
+                confianza_modelo=0, cronograma=None, sistema="", diferenciales=None, imagen_bytes=None):
     if cronograma    is None: cronograma    = []
     if diferenciales is None: diferenciales = []
 
@@ -371,9 +371,6 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     texto_limpio = re.sub(r"\*\*(.*?)\*\*", r"\1", texto_limpio)
     # Quitar cursivas *texto*
     texto_limpio = re.sub(r"\*(.*?)\*", r"\1", texto_limpio)
-    # Quitar tablas Markdown (líneas con |)
-    texto_limpio = re.sub(r"^\|.*\|$", "", texto_limpio, flags=re.MULTILINE)
-    texto_limpio = re.sub(r"^[-|: ]+$",  "", texto_limpio, flags=re.MULTILINE)
     # Limpiar líneas vacías múltiples
     texto_limpio = re.sub(r"\n{3,}", "\n\n", texto_limpio).strip()
 
@@ -439,12 +436,33 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.cell(0, 6, limpiar("Generado con Inteligencia Artificial · Solo para orientación médica"), ln=True, align="C")
     pdf.ln(5)
 
-    # ── DATOS DEL PACIENTE ────────────────────────────────────────
+    # ── DATOS DEL PACIENTE + IMAGEN────────────────────────────────────────
     ficha_y = pdf.get_y()
+    ficha_h = 36
+    
+    # Recuadro fondo                
     pdf.set_fill_color(245, 247, 245)
     pdf.set_draw_color(*GRIS_CLR)
     pdf.set_line_width(0.3)
-    pdf.rect(15, ficha_y, 180, 22, "FD")
+    pdf.rect(15, ficha_y, 180, ficha_h, "FD")
+
+    # Imagen del paciente (si existe)
+    img_x = 155
+    img_w = 36
+    img_h = ficha_h - 4
+    if imagen_bytes:
+        try:
+            import io as _io
+            from PIL import Image as _Img
+            img_tmp = _Img.open(_io.BytesIO(imagen_bytes))
+            img_tmp.thumbnail((200, 200))
+            tmp_path = "/tmp/fisulab_img_pdf.jpg"
+            img_tmp.save(tmp_path, format="JPEG")
+            pdf.image(tmp_path, x=img_x, y=ficha_y + 2, w=img_w, h=img_h)
+        except Exception:
+            pass         
+
+    # Texto de datos
     pdf.set_xy(19, ficha_y + 3)
     pdf.set_font("Arial", "B", 9)
     pdf.set_text_color(*VERDE_OSC)
@@ -452,15 +470,15 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.set_xy(19, ficha_y + 9)
     pdf.set_font("Arial", size=9)
     pdf.set_text_color(*GRIS_OSC)
-    pdf.cell(55, 5, limpiar(f"Paciente: {paciente_id}"))
-    pdf.cell(45, 5, limpiar(f"Edad: {paciente_edad}"))
-    pdf.cell(45, 5, limpiar(f"Sexo: {paciente_sexo}"))
+    pdf.cell(44, 5, limpiar(f"Paciente: {paciente_id}"))
+    pdf.cell(44, 5, limpiar(f"Edad: {paciente_edad}"))
+    pdf.cell(44, 5, limpiar(f"Sexo: {paciente_sexo}"))
     pdf.ln(6)
     pdf.set_x(19)
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(*GRIS_MED)
     pdf.cell(0, 5, limpiar(f"Fecha de generación: {time.strftime('%d/%m/%Y  %H:%M')}"))
-    pdf.ln(12)
+    pdf.set_y(ficha_y + ficha_h + 6)
 
     # ── RESUMEN CLÍNICO IA (3 bloques de color) ─────────────────────────────
     pdf.set_font("Arial", "B", 11)
@@ -516,12 +534,46 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
            (232,241,251), AZUL,      AZUL)
 
     pdf.set_y(by + bh + 6)
-    
-    # ── CRONOGRAMA DINÁMICO ───────────────────────────────────────
-    if cronograma:
+
+    # ── Sección: Clasificación diferencial (página 1, después del resumen) ────────────────────
+    if diferenciales:
+        pdf.ln(2)
         pdf.set_font("Arial", "B", 11)
         pdf.set_text_color(*VERDE_OSC)
-        pdf.cell(0, 7, limpiar("2.  Plan de Tratamiento Orientativo"), ln=True)
+        pdf.cell(0, 7, limpiar("2. Clasificación Diferencial"), ln=True)
+        pdf.set_draw_color(*VERDE)
+        pdf.set_line_width(0.4)
+        pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+        pdf.ln(3)
+
+        difs_ord = sorted(diferenciales, key=lambda x: x.get("probabilidad", 0), reverse=True)
+        for d in difs_ord:
+            nombre = limpiar(d.get("nombre", "—"))
+            prob   = d.get("probabilidad", 0)
+            bar_w  = int(160 * prob / 100)
+
+            pdf.set_font("Arial", size=9)
+            pdf.set_text_color(*GRIS_OSC)
+            pdf.cell(130, 5, nombre)
+            pdf.set_font("Arial", "B", 9)
+            pdf.set_text_color(*VERDE_OSC)
+            pdf.cell(30, 5, f"{prob}%", align="R", ln=True)
+
+            # Barra de probabilidad
+            bar_y = pdf.get_y()
+            pdf.set_fill_color(230, 230, 230)
+            pdf.rect(15, bar_y, 160, 3, "F")
+            if bar_w > 0:
+                pdf.set_fill_color(*VERDE)
+                pdf.rect(15, bar_y, bar_w, 3, "F")
+            pdf.ln(6)
+ 
+    # ── CRONOGRAMA DINÁMICO ───────────────────────────────────────
+    if cronograma:
+        pdf.ln(2)
+        pdf.set_font("Arial", "B", 11)
+        pdf.set_text_color(*VERDE_OSC)
+        pdf.cell(0, 7, limpiar("3. Plan de Tratamiento Orientativo"), ln=True)
         pdf.set_draw_color(*VERDE)
         pdf.set_line_width(0.4)
         pdf.line(15, pdf.get_y(), 195, pdf.get_y())
@@ -537,7 +589,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
 
             # Número de paso en círculo (simulado con rect redondeado)
             cy = pdf.get_y()
-            pdf.set_fill_color(c[0], c[1], c[2])
+            pdf.set_fill_color(*c)
             pdf.rect(15, cy + 1, 7, 7, "F")
             pdf.set_xy(15, cy + 1)
             pdf.set_font("Arial", "B", 7)
@@ -570,39 +622,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
             pdf.multi_cell(169, 5, limpiar(f"Objetivo: {obj}"))
             pdf.ln(2)
 
-    # ── Sección: Clasificación diferencial ────────────────────
-    if diferenciales:
-        pdf.ln(2)
-        pdf.set_font("Arial", "B", 11)
-        pdf.set_text_color(*VERDE_OSC)
-        pdf.cell(0, 7, limpiar("3.  Clasificación Diferencial"), ln=True)
-        pdf.set_draw_color(*VERDE)
-        pdf.set_line_width(0.4)
-        pdf.line(15, pdf.get_y(), 195, pdf.get_y())
-        pdf.ln(3)
-
-        difs_ord = sorted(diferenciales, key=lambda x: x.get("probabilidad", 0), reverse=True)
-        for d in difs_ord:
-            nombre = limpiar(d.get("nombre", "—"))
-            prob   = d.get("probabilidad", 0)
-            bar_w  = int(160 * prob / 100)
-
-            pdf.set_font("Arial", size=9)
-            pdf.set_text_color(*GRIS_OSC)
-            pdf.cell(130, 5, nombre)
-            pdf.set_font("Arial", "B", 9)
-            pdf.set_text_color(*VERDE_OSC)
-            pdf.cell(30, 5, f"{prob}%", align="R", ln=True)
-
-            # Barra de probabilidad
-            bar_y = pdf.get_y()
-            pdf.set_fill_color(230, 230, 230)
-            pdf.rect(15, bar_y, 160, 3, "F")
-            if bar_w > 0:
-                pdf.set_fill_color(*VERDE)
-                pdf.rect(15, bar_y, bar_w, 3, "F")
-            pdf.ln(6)
-            
+               
     # ── PÁGINA 2 — ANÁLISIS DETALLADO DE LA IA ────────────────────
     pdf.add_page()
 
@@ -620,7 +640,13 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
         "PRESUNTO DIAGNOSTICO", "PLAN DE TRATAMIENTO ORIENTATIVO", "CRONOGRAMA POR RANGO DE EDAD",
         "NIVEL DE COMPLEJIDAD", "CONSIDERACIONES ADICIONALES", "DATOS FALTANTES Y ADVERTENCIAS"
     ]
-
+    
+    # Frases del prompt que se filtran en la respuesta — ignorarlas
+    frases_prompt = [
+        "DESCRIBE LO QUE OBSERVAS", "TABLA CON", "IDENTIFICA CUAL CATEGORIA",
+        "NOMBRE TECNICO SEGUN", "HALLAZGOS VISUALES", "ESPECIALIDADES REQUERIDAS",
+        "SEÑALA QUE INFORMACION", "SENALA QUE INFORMACION"
+                  
     for linea in texto_limpio.split("\n"):
         linea_strip = linea.strip()
         if not linea_strip:
@@ -629,6 +655,10 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
 
         linea_upper = linea_strip.upper().replace(".", "").replace(":", "").replace("#", "").replace("*", "").strip()
 
+        # Saltar frases del prompt que se filtran
+        if any(f in linea_upper for f in frases_prompt):
+            continue
+        
         es_titulo = any(t in linea_upper for t in secciones_titulos) and len(linea_strip) < 80
         es_tabla = linea_strip.startswith("|") and linea_strip.endswith("|")
         es_separador_tabla = es_tabla and all(c in "|- :" for c in linea_strip)
@@ -638,26 +668,55 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
             pdf.set_font("Arial", "B", 10)
             pdf.set_text_color(*VERDE_OSC)
             pdf.set_fill_color(232, 245, 238)
-            pdf.cell(180, 7, limpiar(f"  {linea_strip}"), ln=True, fill=True)
+            titulo_limpio = linea_strip.replace("##", "").replace("#", "").strip()
+            pdf.cell(180, 7, limpiar(f"  {titulo_limpio}"), ln=True, fill=True)
             pdf.ln(1)
-        else:
-            if linea_strip.startswith("- "):
-                pdf.set_font("Arial", size=9)
-                pdf.set_text_color(*GRIS_OSC)
-                pdf.set_fill_color(15, 110, 86)
-                bul_y = pdf.get_y() + 3
-                pdf.rect(20, bul_y, 1.5, 1.5, "F")
-                pdf.set_x(23)
-                pdf.multi_cell(172, 5, limpiar(linea_strip[2:]))
-            else:
-                pdf.set_x(15)
-                pdf.set_font("Arial", size=9)
-                pdf.set_text_color(*GRIS_OSC)
-                pdf.multi_cell(180, 5, limpiar(linea_strip))
 
-    # ── AVISO LEGAL ───────────────────────────────────────────────
+        elif es_separador_tabla:
+            continue
+        elif es_tabla:
+            celdas = [c.strip() for c in linea_strip.split("|") if c.strip()]
+            if celdas:
+                ancho_col = 180 // max(len(celdas), 1)
+                es_encabezado = any(
+                    c.upper() in ["PROCEDIMIENTO", "INTERVENCION", "INTERVENCIÓN",
+                                  "RANGO DE EDAD", "OBJETIVO", "NUMERO ESTIMADO",
+                                  "NÚMERO ESTIMADO", "JUSTIFICACION", "JUSTIFICACIÓN"]
+                    for c in celdas
+                )
+                pdf.set_font("Arial", "B" if es_encabezado else "", 8)
+                pdf.set_text_color(*GRIS_OSC)
+                if es_encabezado:
+                    pdf.set_fill_color(232, 245, 238)
+                    for celda in celdas:
+                        pdf.cell(ancho_col, 6, limpiar(celda), border=1, fill=True)
+                else:
+                    for celda in celdas:
+                        pdf.cell(ancho_col, 6, limpiar(celda), border=1)
+                pdf.ln()
+        elif linea_strip.startswith("- ") or linea_strip.startswith("* "):
+            pdf.set_font("Arial", size=9)
+            pdf.set_text_color(*GRIS_OSC)
+            bul_y = pdf.get_y() + 3
+            pdf.set_fill_color(*VERDE)
+            pdf.rect(20, bul_y, 1.5, 1.5, "F")
+            pdf.set_x(23)
+            pdf.multi_cell(172, 5, limpiar(linea_strip[2:]))
+        else:
+            pdf.set_x(15)
+            pdf.set_font("Arial", size=9)
+            pdf.set_text_color(*GRIS_OSC)
+            pdf.multi_cell(180, 5, limpiar(linea_strip))
+
+    # ── AVISO LEGAL  — solo en la última página ───────────────────────────────────────────────
     pdf.ln(6)
     av_y = pdf.get_y()
+
+    # Si el aviso no cabe, agregar nueva página
+    if av_y + 30 > 270:
+        pdf.add_page()
+        av_y = pdf.get_y()
+
     pdf.set_fill_color(255, 248, 225)
     pdf.set_draw_color(200, 150, 0)
     pdf.set_line_width(0.5)
@@ -1145,6 +1204,9 @@ with col_centro:
             complejidad,
             confianza_modelo,
             cronograma,
+            sistema,
+            diferenciales,
+            st.session_state.get("imagen_historial") or (imagen_bytes if imagen_file else None),
         )
     
         # Botones de acción
