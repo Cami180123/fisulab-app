@@ -629,8 +629,13 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     # ── PÁGINA 2 — ANÁLISIS DETALLADO DE LA IA ────────────────────
     # Solo agrega nueva página si hay texto que renderizar
     if texto_limpio.strip():
+    # ── ANÁLISIS DETALLADO — continúa en la misma página si hay espacio
+    # Solo fuerza nueva página si queda muy poco espacio (menos de 60mm)
+    if pdf.get_y() > 220:
         pdf.add_page()
- 
+    else:
+        pdf.ln(8)
+         
     pdf.set_font("Arial", "B", 11)
     pdf.set_text_color(*VERDE_OSC)
     pdf.cell(0, 7, limpiar("4.  Análisis Clínico Detallado"), ln=True)
