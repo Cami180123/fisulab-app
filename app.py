@@ -1221,7 +1221,6 @@ with col_centro:
             diferenciales,
             st.session_state.get("imagen_historial") or st.session_state.get("ultima_imagen_bytes"),
         )
-        )
     
         # Botones de acción
         b1, b2 = st.columns(2)
