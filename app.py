@@ -646,6 +646,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
         "DESCRIBE LO QUE OBSERVAS", "TABLA CON", "IDENTIFICA CUAL CATEGORIA",
         "NOMBRE TECNICO SEGUN", "HALLAZGOS VISUALES", "ESPECIALIDADES REQUERIDAS",
         "SEÑALA QUE INFORMACION", "SENALA QUE INFORMACION"
+    ]
                   
     for linea in texto_limpio.split("\n"):
         linea_strip = linea.strip()
