@@ -629,7 +629,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     # ── PÁGINA 2 — ANÁLISIS DETALLADO DE LA IA ────────────────────
     if texto_limpio.strip():
         # ── ANÁLISIS DETALLADO — continúa en la misma página si hay espacio
-        if pdf.get_y() > 220:
+        if pdf.get_y() > 260:
             pdf.add_page()
         else:
             pdf.ln(8)
@@ -660,6 +660,12 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     ]
                   
     for linea in texto_limpio.split("\n"):
+        # 🔴 CONTROL DE SALTO DE PÁGINA DINÁMICO
+        if pdf.get_y() > 260:
+            pdf.add_page()
+            pdf.set_font("Arial", size=9)
+            pdf.set_text_color(*GRIS_OSC)
+        
         linea_strip = linea.strip()
         if not linea_strip:
             pdf.ln(2)
@@ -717,6 +723,9 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
                     # Calcular altura necesaria para la fila más alta
                     # usando multi_cell en modo "dry run" para medir
                     altura_fila = 5
+                    # FIX AQUÍ
+                    if pdf.get_y() + altura_fila > 270:
+                        pdf.add_page()
                     for idx, celda in enumerate(celdas):
                         ancho = anchos[idx] if idx < len(anchos) else 50
                         # Estimar líneas necesarias: ~12 chars por línea a font 7
@@ -754,6 +763,8 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
             pdf.set_x(15)
             pdf.set_font("Arial", size=9)
             pdf.set_text_color(*GRIS_OSC)
+            if pdf.get_y() > 260
+                pdf.add_page()
             pdf.multi_cell(180, 5, limpiar(linea_strip))
 
     # ── AVISO LEGAL  — solo en la última página ───────────────────────────────────────────────
