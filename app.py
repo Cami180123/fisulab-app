@@ -373,6 +373,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     texto_limpio = re.sub(r"\*(.*?)\*", r"\1", texto_limpio)
     # Limpiar líneas vacías múltiples
     texto_limpio = re.sub(r"\n{3,}", "\n\n", texto_limpio).strip()
+    texto_limpio = re.sub(r"\n---+\n", "\n", texto_limpio)
 
     # Colores corporativos
     VERDE       = (15, 110, 86)
@@ -450,7 +451,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     img_x = 155
     img_w = 36
     img_h = ficha_h - 4
-    if imagen_bytes:
+    if imagen_bytes and len(imagen_bytes) > 100:
         try:
             import io as _io
             from PIL import Image as _Img
@@ -548,6 +549,8 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
 
         difs_ord = sorted(diferenciales, key=lambda x: x.get("probabilidad", 0), reverse=True)
         for d in difs_ord:
+            if d.get("probabilidad", 0) == 0:
+                continue
             nombre = limpiar(d.get("nombre", "—"))
             prob   = d.get("probabilidad", 0)
             bar_w  = int(160 * prob / 100)
@@ -678,7 +681,13 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
         elif es_tabla:
             celdas = [c.strip() for c in linea_strip.split("|") if c.strip()]
             if celdas:
-                ancho_col = 180 // max(len(celdas), 1)
+                n = len(celdas)
+                if n == 3:
+                    anchos = [65, 35, 70]
+                elif n == 2:
+                    anchos = [90, 80]
+                else:
+                    anchos = [170 // max(n, 1)] * n
                 es_encabezado = any(
                     c.upper() in ["PROCEDIMIENTO", "INTERVENCION", "INTERVENCIÓN",
                                   "RANGO DE EDAD", "OBJETIVO", "NUMERO ESTIMADO",
@@ -689,12 +698,14 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
                 pdf.set_text_color(*GRIS_OSC)
                 if es_encabezado:
                     pdf.set_fill_color(232, 245, 238)
-                    for celda in celdas:
-                        pdf.cell(ancho_col, 6, limpiar(celda), border=1, fill=True)
+                    for idx, celda in enumerate(celdas):
+                        pdf.cell(anchos[idx] if idx < len(anchos) else 50, 6, limpiar(celda), border=1, fill=True)
                 else:
-                    for celda in celdas:
-                        pdf.cell(ancho_col, 6, limpiar(celda), border=1)
+                    for idx, celda in enumerate(celdas):
+                        pdf.cell(anchos[idx] if idx < len(anchos) else 50, 6, limpiar(celda), border=1)
                 pdf.ln()
+
+   
         elif linea_strip.startswith("- ") or linea_strip.startswith("* "):
             pdf.set_font("Arial", size=9)
             pdf.set_text_color(*GRIS_OSC)
@@ -904,6 +915,7 @@ if analizar and imagen_file and API_KEY:
         fmt = imagen_pil.format if imagen_pil.format else "JPEG"
         imagen_pil.save(buffer, format=fmt)
         imagen_bytes = buffer.getvalue()
+        st.session_state.ultima_imagen_bytes = imagen_bytes
 
         contexto_paciente = f"""
 Datos del paciente:
@@ -1207,7 +1219,8 @@ with col_centro:
             cronograma,
             sistema,
             diferenciales,
-            st.session_state.get("imagen_historial") or (imagen_bytes if imagen_file else None),
+            st.session_state.get("imagen_historial") or st.session_state.get("ultima_imagen_bytes"),
+        )
         )
     
         # Botones de acción
@@ -1473,13 +1486,3 @@ with col_der:
                 </div>
             </div>
             """, unsafe_allow_html=True)
-
-
-# ── PIE DE PÁGINA ─────────────────────────────────────────────────────────────
-st.divider()
-st.markdown("""
-<div style="text-align:center;color:#adb5bd;font-size:12px;padding:8px 0;">
-    FISULAB · IA de apoyo clínico · Proyecto académico — Datos e Inteligencia Artifical (IA) · 2026<br>
-    <span style="color:#dc3545">Este sistema es experimental. No usar como único criterio de diagnóstico.</span>
-</div>
-""", unsafe_allow_html=True)
