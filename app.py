@@ -741,7 +741,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
     pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(80, 50, 0)
     pdf.multi_cell(172, 4.5, limpiar(
-        "IMPORTANTE: Este análisis es una orientación de apoyo generada por Inteligencia Artificial, basada exclusivamente"
+        "Este análisis es una orientación de apoyo generada por Inteligencia Artificial, basada exclusivamente"
         "en el ánalisis de imágenes fotográficas. No constituye un diagnóstico medico definitivo. La clasificación y el plan de tratamiento deben ser validados" 
         "mediante evaluación clínica presencial completa por el equipo clínico multidisciplinar de FISULAB. El modelo puede presentar limitaciones según"
         "la calidad, ángulo e iluminación de la imagen proporcionada."
