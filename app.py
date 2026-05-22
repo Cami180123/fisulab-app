@@ -627,8 +627,10 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
 
                
     # ── PÁGINA 2 — ANÁLISIS DETALLADO DE LA IA ────────────────────
-    pdf.add_page()
-
+    # Solo agrega nueva página si hay texto que renderizar
+    if texto_limpio.strip():
+        pdf.add_page()
+ 
     pdf.set_font("Arial", "B", 11)
     pdf.set_text_color(*VERDE_OSC)
     pdf.cell(0, 7, limpiar("4.  Análisis Clínico Detallado"), ln=True)
@@ -683,28 +685,56 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
             if celdas:
                 n = len(celdas)
                 if n == 3:
-                    anchos = [65, 35, 70]
+                    anchos = [55, 30, 95]   # más ancho para objetivo/justificación
                 elif n == 2:
-                    anchos = [90, 80]
+                    anchos = [85, 85]
                 else:
                     anchos = [170 // max(n, 1)] * n
+ 
                 es_encabezado = any(
                     c.upper() in ["PROCEDIMIENTO", "INTERVENCION", "INTERVENCIÓN",
                                   "RANGO DE EDAD", "OBJETIVO", "NUMERO ESTIMADO",
                                   "NÚMERO ESTIMADO", "JUSTIFICACION", "JUSTIFICACIÓN"]
                     for c in celdas
                 )
-                pdf.set_font("Arial", "B" if es_encabezado else "", 8)
+ 
+                pdf.set_font("Arial", "B" if es_encabezado else "", 7)
                 pdf.set_text_color(*GRIS_OSC)
+ 
                 if es_encabezado:
                     pdf.set_fill_color(232, 245, 238)
                     for idx, celda in enumerate(celdas):
-                        pdf.cell(anchos[idx] if idx < len(anchos) else 50, 6, limpiar(celda), border=1, fill=True)
+                        ancho = anchos[idx] if idx < len(anchos) else 50
+                        pdf.cell(ancho, 6, limpiar(celda), border=1, fill=True)
+                    pdf.ln()
                 else:
+                    # Calcular altura necesaria para la fila más alta
+                    # usando multi_cell en modo "dry run" para medir
+                    altura_fila = 5
                     for idx, celda in enumerate(celdas):
-                        pdf.cell(anchos[idx] if idx < len(anchos) else 50, 6, limpiar(celda), border=1)
-                pdf.ln()
-
+                        ancho = anchos[idx] if idx < len(anchos) else 50
+                        # Estimar líneas necesarias: ~12 chars por línea a font 7
+                        chars_por_linea = max(int(ancho / 2.0), 1)
+                        lineas_celda = max(1, len(limpiar(celda)) // chars_por_linea + 1)
+                        altura_fila = max(altura_fila, lineas_celda * 4)
+ 
+                    x_inicio = pdf.get_x()
+                    y_inicio = pdf.get_y()
+ 
+                    for idx, celda in enumerate(celdas):
+                        ancho = anchos[idx] if idx < len(anchos) else 50
+                        texto_celda = limpiar(celda)
+                        # Dibujar borde de la celda
+                        pdf.rect(pdf.get_x(), y_inicio, ancho, altura_fila)
+                        # Escribir texto con multi_cell dentro de la celda
+                        pdf.set_xy(pdf.get_x() + 1, y_inicio + 1)
+                        x_celda = pdf.get_x()
+                        pdf.multi_cell(ancho - 2, 4, texto_celda)
+                        # Reposicionar al inicio de la siguiente celda
+                        pdf.set_xy(x_inicio + sum(anchos[:idx+1] if idx+1 <= len(anchos) else [50]*(idx+1)), y_inicio)
+ 
+                    pdf.set_y(y_inicio + altura_fila)
+                    pdf.ln(1)
    
         elif linea_strip.startswith("- ") or linea_strip.startswith("* "):
             pdf.set_font("Arial", size=9)
