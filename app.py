@@ -1221,14 +1221,6 @@ with col_der:
                 </div>
             </div>
         </div>
-        <div style="background:#E1F5EE;border-radius:10px;padding:10px 14px;">
-            <div style="font-size:13px;font-weight:700;color:#085041;line-height:1.3;">
-                {tipo_top_corto}
-            </div>
-            <div style="font-size:11px;color:#0F6E56;margin-top:3px;">
-                Tipo más frecuente · {tipo_top_pct}%
-            </div>
-        </div>
     </div>
     """
 
