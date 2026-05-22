@@ -763,7 +763,7 @@ def generar_pdf(paciente_id, paciente_edad, paciente_sexo, resultado_texto,
             pdf.set_x(15)
             pdf.set_font("Arial", size=9)
             pdf.set_text_color(*GRIS_OSC)
-            if pdf.get_y() > 260
+            if pdf.get_y() > 260:
                 pdf.add_page()
             pdf.multi_cell(180, 5, limpiar(linea_strip))
 
